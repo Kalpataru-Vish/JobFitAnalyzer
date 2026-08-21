@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Job Fit Analyzer</title>
+<meta name="description" content="AI-powered Job Fit Analyzer — anti-bias, regulatory compliant, human-in-the-loop employment screening tool." />
+<meta name="robots" content="noindex, nofollow" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; font-size: 14px; line-height: 1.6; background: #f0f4fa; color: #1f2328; }
+
+/* ── Terms of Use Modal ── */
+#tou-modal { position: fixed; inset: 0; background: rgba(15,23,42,.72); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
+#tou-modal.on { display: flex; }
+.tou-box { background: #fff; border-radius: 16px; padding: 28px 26px 22px; width: 100%; max-width: 500px; box-shadow: 0 8px 32px rgba(0,0,0,.18); max-height: 90vh; overflow-y: auto; }
+.tou-box h3 { font-size: 15px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
+.tou-box .tou-sub { font-size: 11px; color: #94a3b8; margin-bottom: 14px; }
+.tou-section { margin-bottom: 12px; }
+.tou-section h4 { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #4f46e5; margin-bottom: 5px; }
+.tou-section p, .tou-section li { font-size: 12px; color: #374151; line-height: 1.65; }
+.tou-section ul { padding-left: 16px; }
+.tou-section li { margin-bottom: 3px; }
+.tou-checkbox-row { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+.tou-checkbox-row input[type=checkbox] { margin-top: 2px; flex-shrink: 0; accent-color: #4f46e5; width: 15px; height: 15px; cursor: pointer; }
+.tou-checkbox-row label { font-size: 12px; color: #374151; line-height: 1.6; cursor: pointer; }
+.tou-actions { display: flex; gap: 10px; }
+.tou-actions .auth-btn { flex: 1; }
+.tou-actions .btn-cancel { flex: 1; }
+
+/* ── Pre-Deployment Checklist Banner ── */
+#predeploy-banner { background: #fff; border: 2px solid #f59e0b; border-radius: 12px; padding: 14px 18px; margin-bottom: 18px; display: none; }
+#predeploy-banner.on { display: block; }
+.pd-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pd-hdr-title { font-size: 12px; font-weight: 800; color: #92400e; flex: 1; }
+.pd-hdr-dismiss { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 16px; line-height: 1; padding: 0; }
+.pd-hdr-dismiss:hover { color: #1e293b; }
+.pd-items { display: flex; flex-direction: column; gap: 6px; }
+.pd-item { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #374151; }
+.pd-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; accent-color: #4f46e5; cursor: pointer; }
+.pd-item label { line-height: 1.55; cursor: pointer; }
+.pd-item label strong { color: #1e293b; }
+.pd-progress { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 11px; color: #64748b; }
+.pd-bar { flex: 1; height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden; }
+.pd-fill { height: 100%; background: #16a34a; border-radius: 2px; transition: width .4s ease; }
+
+/* ── Auth restricted-use notice ── */
+.auth-restricted { font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.6; margin-top: 14px; padding-top: 12px; border-top: 1px solid #f1f5f9; }
+.auth-restricted strong { color: #374151; }
+.page { max-width: 820px; margin: 0 auto; padding: 36px 20px 56px; }
+
+/* Header */
+.header { text-align: center; margin-bottom: 28px; }
+.ai-badge { display: inline-flex; align-items: center; gap: 6px; background: #1e293b; color: #a5b4fc; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; margin-bottom: 10px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: #818cf8; display: inline-block; }
+h1 { font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+.subtitle { font-size: 13px; color: #57606a; }
+
+/* Grid */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+@media (max-width: 580px) { .grid { grid-template-columns: 1fr; } }
+.card { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.card-label { font-weight: 700; font-size: 13px; color: #1e293b; }
+.upload-zone { border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 14px; text-align: center; cursor: pointer; position: relative; transition: border-color .15s, background .15s; }
+.upload-zone:hover { border-color: #6366f1; background: #eef2ff; }
+.upload-zone input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 20px; color: #6366f1; display: block; margin-bottom: 4px; }
+.upload-hint { font-size: 12px; color: #64748b; }
+.upload-hint strong { color: #6366f1; }
+.file-badge { display: none; align-items: center; gap: 8px; background: #eef2ff; border: 1px solid #a5b4fc; border-radius: 6px; padding: 6px 10px; font-size: 12px; color: #4338ca; }
+.file-badge.on { display: flex; }
+.fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rm { background: none; border: none; cursor: pointer; color: #94a3b8; font-size: 14px; padding: 0 2px; line-height: 1; }
+.rm:hover { color: #dc2626; }
+.div-or { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #94a3b8; }
+.div-or::before, .div-or::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+textarea { width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 13px; background: #f8fafc; color: #1f2328; resize: vertical; outline: none; transition: border-color .15s; }
+textarea:focus { border-color: #6366f1; background: #fff; }
+
+/* Actions */
+.actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 28px; }
+.btn { padding: 10px 28px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: opacity .15s, transform .1s; }
+.btn:hover { opacity: .88; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: #4f46e5; color: #fff; }
+.btn-clear { background: #e2e8f0; color: #1e293b; }
+
+.err { background: #fff7f7; border: 1px solid #fca5a5; color: #b91c1c; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+
+/* Result */
+#result { display: none; }
+
+/* Verdict */
+.verdict-row { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.verdict-top { display: flex; align-items: center; gap: 24px; margin-bottom: 18px; }
+@media (max-width: 480px) { .verdict-top { flex-direction: column; text-align: center; } }
+.ring-wrap { flex-shrink: 0; }
+svg.ring circle.ring-bg { fill: none; stroke: #e2e8f0; stroke-width: 7; }
+svg.ring circle.ring-fg { fill: none; stroke-width: 7; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 50% 50%; transition: stroke-dashoffset .9s cubic-bezier(.4,0,.2,1), stroke .4s; }
+.ring-label { font-size: 15px; font-weight: 800; text-anchor: middle; dominant-baseline: central; transition: fill .4s; }
+.ring-sub { font-size: 7px; text-anchor: middle; fill: #64748b; }
+.vinfo { flex: 1; min-width: 0; }
+.vinfo h2 { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+.match h2 { color: #15803d; }
+.nomatch h2 { color: #b91c1c; }
+.vinfo p { font-size: 13px; color: #57606a; margin-bottom: 10px; }
+/* 3-score fit cards */
+.fit-scores { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+@media (max-width: 480px) { .fit-scores { grid-template-columns: 1fr; } }
+.fit-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; }
+.fit-card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+.fit-card-score { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+.fit-card-bar { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.fit-card-fill { height: 100%; border-radius: 3px; transition: width .8s ease; }
+.fit-card-sub { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+.fit-card.overall { background: #1e293b; border-color: #334155; }
+.fit-card.overall .fit-card-label { color: #94a3b8; }
+.fit-card.overall .fit-card-sub { color: #64748b; }
+/* mini bars */
+.mini-bars { display: flex; flex-direction: column; gap: 5px; }
+.mrow { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.mlbl { width: 86px; color: #64748b; flex-shrink: 0; }
+.mtrack { flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.mfill { height: 100%; border-radius: 3px; transition: width .7s ease; }
+.mpct { width: 34px; text-align: right; font-weight: 600; }
+/* M/P badges on evidence tags */
+.badge-m { font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 3px; background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; margin-left: 3px; vertical-align: middle; }
+.badge-p { font-size: 9px; font-weight: 800; padding: 1px 4px; border-radius: 3px; background: #f0f9ff; color: #0369a1; border: 1px solid #7dd3fc; margin-left: 3px; vertical-align: middle; }
+
+/* AI Panel */
+.ai-panel { background: #1e293b; border-radius: 14px; padding: 20px 22px; margin-bottom: 16px; color: #e2e8f0; }
+.ai-hdr { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #a5b4fc; margin-bottom: 12px; }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: #818cf8; flex-shrink: 0; }
+.narrative { font-size: 13px; line-height: 1.75; color: #cbd5e1; border-left: 2px solid #4f46e5; padding-left: 12px; margin-bottom: 18px; }
+
+/* Gap Matrix */
+.gap-matrix-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #94a3b8; margin-bottom: 10px; }
+.gap-matrix { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 4px; }
+.gap-matrix th { padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748b; border-bottom: 1px solid #334155; background: #0f172a; }
+.gap-matrix td { padding: 9px 10px; border-bottom: 1px solid #1e293b; vertical-align: top; color: #cbd5e1; line-height: 1.5; }
+.gap-matrix tr:last-child td { border-bottom: none; }
+.gap-matrix tr:hover td { background: rgba(255,255,255,.03); }
+.gm-domain { font-weight: 700; color: #e2e8f0; white-space: nowrap; }
+.gm-skill  { color: #a5b4fc; font-weight: 600; }
+.gm-type   { white-space: nowrap; }
+.sev-critical { color: #f87171; font-weight: 700; }
+.sev-high     { color: #fb923c; font-weight: 700; }
+.sev-medium   { color: #fbbf24; font-weight: 600; }
+.sev-low      { color: #94a3b8; }
+.gap-matrix .suggestion { color: #86efac; font-style: italic; font-size: 11.5px; }
+.gm-status-found   { color: #4ade80; }
+.gm-status-partial { color: #fbbf24; }
+.gm-status-missing { color: #f87171; }
+
+/* Section scores */
+.sec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+@media (max-width: 480px) { .sec-grid { grid-template-columns: 1fr 1fr; } }
+.sec-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+.sec-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin-bottom: 8px; }
+.sec-val { font-size: 24px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+.sec-bar { height: 4px; background: #e2e8f0; border-radius: 2px; overflow: hidden; }
+.sec-fill { height: 100%; border-radius: 2px; transition: width .7s ease; }
+.hi { color: #15803d; } .mi { color: #d97706; } .lo { color: #dc2626; }
+.bhi { background: #16a34a; } .bmi { background: #d97706; } .blo { background: #dc2626; }
+
+/* ── Evidence table ── */
+.ev-wrap { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+.ev-legend { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; background: #f8fafc; }
+.ev-legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #374151; font-weight: 600; }
+.ev-tier-hdr { display: flex; align-items: center; gap: 8px; padding: 10px 16px 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; border-top: 1px solid #f1f5f9; }
+.ev-tier-hdr:first-of-type { border-top: none; }
+.ev-tier-count { font-size: 11px; font-weight: 600; margin-left: auto; color: #64748b; }
+.ev-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 16px 12px; }
+.ev-tag { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid; display: inline-flex; align-items: center; gap: 4px; }
+/* tier colours */
+.ev-strong  { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+.ev-partial { background: #fefce8; border-color: #fde047; color: #854d0e; }
+.ev-weak    { background: #fff7ed; border-color: #fdba74; color: #9a3412; }
+.ev-none    { background: #fff7f7; border-color: #fca5a5; color: #b91c1c; }
+/* tier header colours */
+.ev-hdr-strong  { color: #15803d; }
+.ev-hdr-partial { color: #854d0e; }
+.ev-hdr-weak    { color: #9a3412; }
+.ev-hdr-none    { color: #b91c1c; }
+.empty { font-size: 12px; color: #94a3b8; font-style: italic; padding: 0 16px 12px; display: block; }
+
+/* ── Governance & Bias Panel ── */
+.gov-panel { background: #fff; border: 2px solid #6366f1; border-radius: 14px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+.gov-hdr { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: #f8fafc; cursor: pointer; user-select: none; border-bottom: 1px solid #e2e8f0; }
+.gov-hdr-title { font-size: 13px; font-weight: 800; color: #1e293b; flex: 1; }
+.gov-toggle { font-size: 11px; color: #6366f1; font-weight: 700; }
+.gov-body { padding: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 580px) { .gov-body { grid-template-columns: 1fr; } }
+.gov-section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+.gov-section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.gov-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #374151; margin-bottom: 6px; line-height: 1.5; }
+.gov-row:last-child { margin-bottom: 0; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 12px; white-space: nowrap; flex-shrink: 0; }
+.chip-pass  { background: #f0fdf4; color: #15803d; border: 1px solid #86efac; }
+.chip-warn  { background: #fefce8; color: #854d0e; border: 1px solid #fde047; }
+.chip-fail  { background: #fff7f7; color: #b91c1c; border: 1px solid #fca5a5; }
+.chip-info  { background: #f0f9ff; color: #0369a1; border: 1px solid #7dd3fc; }
+.bias-alert { background: #fff7ed; border: 1px solid #fdba74; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; display: none; }
+.bias-alert.on { display: block; }
+.bias-alert-title { font-size: 12px; font-weight: 800; color: #9a3412; margin-bottom: 6px; }
+.bias-alert-list { font-size: 12px; color: #9a3412; padding-left: 16px; }
+.bias-alert-list li { margin-bottom: 3px; }
+.hitl-band { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 12px; display: none; }
+.hitl-band.on { display: flex; align-items: center; gap: 10px; }
+.hitl-icon { font-size: 20px; flex-shrink: 0; }
+.hitl-text { flex: 1; color: #374151; line-height: 1.5; }
+.hitl-text strong { color: #d97706; }
+/* Consent modal */
+#consent-modal { position: fixed; inset: 0; background: rgba(15,23,42,.65); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+#consent-modal.on { display: flex; }
+.consent-box { background: #fff; border-radius: 16px; padding: 28px 26px 22px; width: 100%; max-width: 440px; box-shadow: 0 8px 32px rgba(0,0,0,.14); }
+.consent-box h3 { font-size: 15px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+.consent-box p { font-size: 12px; color: #64748b; line-height: 1.65; margin-bottom: 12px; }
+.consent-box ul { font-size: 12px; color: #374151; padding-left: 18px; margin-bottom: 16px; }
+.consent-box ul li { margin-bottom: 4px; }
+.consent-actions { display: flex; gap: 10px; }
+.consent-actions .auth-btn { flex: 1; }
+.consent-actions .btn-cancel { flex: 1; }
+.audit-log-btn { background: none; border: 1px solid #cbd5e1; border-radius: 6px; color: #64748b; font-size: 11px; padding: 4px 10px; cursor: pointer; margin-left: auto; display: block; margin-top: 10px; }
+.audit-log-btn:hover { border-color: #6366f1; color: #6366f1; }
+.export-pdf-btn { background: #4f46e5; color: #fff; border: none; border-radius: 6px; font-size: 11px; font-weight: 700; padding: 5px 12px; cursor: pointer; margin-top: 10px; display: inline-flex; align-items: center; gap: 5px; }
+.export-pdf-btn:hover { opacity: .88; }
+
+/* ── Print stylesheet for PDF export ── */
+@media print {
+  body { background: #fff !important; }
+  #auth-overlay, .app-nav, .grid, .actions, .err, .verdict-row, .ai-panel, .sec-grid, .ev-wrap, .bias-alert, .hitl-band, #consent-modal, #code-modal,
+  .gov-hdr .gov-toggle, .export-pdf-btn, .audit-log-btn,
+  div[style*="position:fixed"] { display: none !important; }
+  .gov-panel { border: 1px solid #ccc !important; box-shadow: none !important; page-break-inside: avoid; }
+  .gov-body { display: grid !important; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .gov-section { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 8px; padding: 12px; }
+  .chip { border: 1px solid #ccc !important; }
+  #print-header { display: block !important; }
+  #result { display: block !important; }
+}
+#print-header { display: none; font-size: 13px; color: #374151; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+
+/* ── Counterfactual Score Simulation ── */
+.cf-panel { background: #fff; border: 1px solid #c7d2fe; border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+.cf-hdr { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #eef2ff; cursor: pointer; user-select: none; border-bottom: 1px solid #c7d2fe; }
+.cf-hdr-title { font-size: 13px; font-weight: 800; color: #3730a3; flex: 1; }
+.cf-toggle { font-size: 11px; color: #6366f1; font-weight: 700; }
+.cf-body { padding: 16px; }
+.cf-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media (max-width: 520px) { .cf-compare { grid-template-columns: 1fr; } }
+.cf-box { border-radius: 10px; padding: 14px; text-align: center; }
+.cf-box-orig { background: #f8fafc; border: 1px solid #e2e8f0; }
+.cf-box-counter { background: #fefce8; border: 1px solid #fde047; }
+.cf-box-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748b; margin-bottom: 6px; }
+.cf-box-score { font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.cf-box-sub { font-size: 11px; color: #94a3b8; }
+.cf-delta { text-align: center; font-size: 13px; font-weight: 700; margin-bottom: 12px; padding: 8px; border-radius: 8px; }
+.cf-delta-up   { background: #f0fdf4; color: #15803d; }
+.cf-delta-down { background: #fff7f7; color: #b91c1c; }
+.cf-delta-same { background: #f8fafc; color: #64748b; }
+.cf-stripped { font-size: 12px; color: #374151; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; }
+.cf-stripped strong { color: #1e293b; }
+
+/* ── Dark Mode ── */
+body.dark { background: #0f172a; color: #e2e8f0; }
+body.dark .page { color: #e2e8f0; }
+body.dark .card, body.dark .verdict-row, body.dark .sec-card, body.dark .ev-wrap, body.dark .gov-panel, body.dark .cf-panel { background: #1e293b; border-color: #334155; }
+body.dark .card-label, body.dark h1, body.dark .vinfo h2 { color: #e2e8f0; }
+body.dark textarea, body.dark .field-group input { background: #0f172a; border-color: #334155; color: #e2e8f0; }
+body.dark textarea:focus, body.dark .field-group input:focus { border-color: #818cf8; background: #1e293b; }
+body.dark .upload-zone { background: #1e293b; border-color: #334155; }
+body.dark .upload-zone:hover { background: #1e3a5f; border-color: #818cf8; }
+body.dark .ev-legend, body.dark .gov-hdr, body.dark .cf-hdr { background: #0f172a; border-color: #334155; }
+body.dark .gov-section, body.dark .cf-box-orig { background: #0f172a; border-color: #334155; }
+body.dark .sec-card { background: #1e293b; border-color: #334155; }
+body.dark .fit-card { background: #0f172a; border-color: #334155; }
+body.dark .bias-alert { background: #2d1a0a; border-color: #92400e; }
+body.dark .hitl-band { background: #1e293b; border-color: #334155; }
+body.dark .gov-hdr-title, body.dark .cf-hdr-title { color: #e2e8f0; }
+body.dark .gov-row { color: #cbd5e1; }
+body.dark .subtitle, body.dark .upload-hint, body.dark .vinfo p { color: #94a3b8; }
+body.dark .btn-clear { background: #334155; color: #e2e8f0; }
+body.dark .cf-stripped { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+.dark-toggle-btn { position: fixed; bottom: 50px; right: 16px; background: #1e293b; color: #a5b4fc; border: 1px solid #334155; border-radius: 20px; font-size: 12px; font-weight: 700; padding: 6px 14px; cursor: pointer; z-index: 999; transition: background .2s; }
+.dark-toggle-btn:hover { background: #334155; }
+
+/* ── Share Report ── */
+.share-btn { background: none; border: 1px solid #cbd5e1; border-radius: 6px; color: #64748b; font-size: 11px; font-weight: 700; padding: 5px 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.share-btn:hover { border-color: #6366f1; color: #6366f1; }
+.share-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #a5b4fc; font-size: 12px; font-weight: 700; padding: 8px 18px; border-radius: 8px; z-index: 9999; display: none; white-space: nowrap; }
+.share-toast.on { display: block; }
+
+/* ── Score Tooltip ── */
+.fit-card { position: relative; }
+.score-tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #1e293b; color: #e2e8f0; font-size: 11px; border-radius: 8px; padding: 10px 12px; width: 220px; z-index: 100; box-shadow: 0 4px 14px rgba(0,0,0,.18); pointer-events: none; line-height: 1.6; }
+.score-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #1e293b; }
+.fit-card:hover .score-tooltip { display: block; }
+
+/* ── Access code modal ── */
+#code-modal { position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+#code-modal.on { display: flex; }
+.code-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 32px 28px 24px; width: 100%; max-width: 380px; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+.code-box h3 { font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 6px; }
+.code-box p { font-size: 13px; color: #64748b; margin-bottom: 18px; line-height: 1.6; }
+.code-box .field-group { margin-bottom: 12px; }
+.code-actions { display: flex; gap: 10px; margin-top: 4px; }
+.code-actions .auth-btn { flex: 1; }
+.btn-cancel { flex: 1; background: #e2e8f0; color: #1e293b; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; }
+.btn-cancel:hover { opacity: .88; }
+.code-err { font-size: 12px; color: #b91c1c; background: #fff7f7; border: 1px solid #fca5a5; border-radius: 6px; padding: 8px 12px; display: none; margin-bottom: 10px; }
+.code-err.on { display: block; }
+
+/* ── Auth overlay ── */
+#auth-overlay { position: fixed; inset: 0; background: #f0f4fa; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.auth-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 36px 32px 28px; width: 100%; max-width: 400px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+.auth-logo { text-align: center; margin-bottom: 20px; }
+.auth-logo .ai-badge { margin-bottom: 10px; }
+.auth-logo h2 { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+.auth-logo p { font-size: 13px; color: #64748b; }
+.auth-tabs { display: flex; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+.auth-tab { flex: 1; padding: 9px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; background: #f8fafc; color: #64748b; transition: background .15s, color .15s; }
+.auth-tab.active { background: #4f46e5; color: #fff; }
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-form.hidden { display: none; }
+.field-group { display: flex; flex-direction: column; gap: 5px; }
+.field-group label { font-size: 12px; font-weight: 600; color: #374151; }
+.field-group input { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; font-family: inherit; font-size: 13px; background: #f8fafc; color: #1f2328; outline: none; transition: border-color .15s; }
+.field-group input:focus { border-color: #6366f1; background: #fff; }
+.auth-btn { background: #4f46e5; color: #fff; border: none; border-radius: 8px; padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s; margin-top: 4px; }
+.auth-btn:hover { opacity: .88; }
+.auth-err { font-size: 12px; color: #b91c1c; background: #fff7f7; border: 1px solid #fca5a5; border-radius: 6px; padding: 8px 12px; display: none; }
+.auth-err.on { display: block; }
+.auth-ok  { font-size: 12px; color: #15803d; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 8px 12px; display: none; }
+.auth-ok.on  { display: block; }
+.auth-divider { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #94a3b8; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+
+/* navbar strip shown after login */
+.app-nav { display: none; background: #1e293b; padding: 10px 24px; align-items: center; justify-content: space-between; }
+.app-nav.on { display: flex; }
+.app-nav .nav-brand { color: #a5b4fc; font-size: 13px; font-weight: 700; letter-spacing: .04em; }
+.app-nav .nav-user { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #cbd5e1; }
+.app-nav .nav-signout { background: none; border: 1px solid #475569; border-radius: 6px; color: #94a3b8; font-size: 12px; padding: 4px 10px; cursor: pointer; transition: border-color .15s, color .15s; }
+.app-nav .nav-signout:hover { border-color: #a5b4fc; color: #a5b4fc; }
+</style>
+</head>
+<body>
+
+<!-- ── Auth overlay ── -->
+<div id="auth-overlay">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="ai-badge"><span class="dot"></span> AI-Powered</div>
+      <h2>Job Fit Analyzer</h2>
+      <p>Sign up or log in to access the tool</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login">Log In</button>
+      <button class="auth-tab" id="tab-signup">Sign Up</button>
+    </div>
+
+    <!-- Login form -->
+    <div class="auth-form" id="form-login">
+      <div class="auth-err" id="login-err"></div>
+      <div class="field-group">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="field-group">
+        <label for="login-pass">Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button class="auth-btn" id="login-btn">Log In</button>
+    </div>
+
+    <!-- Sign Up form -->
+    <div class="auth-form hidden" id="form-signup">
+      <div class="auth-err" id="signup-err"></div>
+      <div class="auth-ok"  id="signup-ok">Account created! You can now log in.</div>
+      <div class="field-group">
+        <label for="signup-name">Full Name</label>
+        <input type="text" id="signup-name" placeholder="Jane Smith" autocomplete="name"/>
+      </div>
+      <div class="field-group">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="field-group">
+        <label for="signup-pass">Password <span style="font-weight:400;color:#94a3b8">(min 6 chars)</span></label>
+        <input type="password" id="signup-pass" placeholder="••••••••" autocomplete="new-password"/>
+      </div>
+      <div class="field-group">
+        <label for="signup-pass2">Confirm Password</label>
+        <input type="password" id="signup-pass2" placeholder="••••••••" autocomplete="new-password"/>
+      </div>
+      <button class="auth-btn" id="signup-btn">Create Account</button>
+    </div>
+    <!-- Restricted use notice inside auth box -->
+    <div class="auth-restricted">
+      <strong>Authorised HR Personnel Only.</strong><br>
+      By creating an account you agree to the <span id="open-tou-link" style="color:#6366f1;cursor:pointer;font-weight:700;text-decoration:underline">Terms of Use</span>.
+    </div>
+  </div>
+</div>
+
+<!-- ── Terms of Use Modal ── -->
+<div id="tou-modal">
+  <div class="tou-box">
+    <h3>📋 Terms of Use</h3>
+    <div class="tou-sub">Job Fit Analyzer · Effective from first use · Version 1.0</div>
+
+    <div class="tou-section">
+      <h4>1. Authorised Use</h4>
+      <p>This tool is provided exclusively for use by <strong>authorised HR, Talent Acquisition, and Recruitment professionals</strong> within the deploying organisation. Unauthorised access or use for purposes other than evaluating candidate-to-role fit is strictly prohibited.</p>
+    </div>
+    <div class="tou-section">
+      <h4>2. Advisory Scores Only</h4>
+      <p>All scores generated by this tool are <strong>advisory only</strong>. No hiring, rejection, shortlisting, or screening decision may be made solely on the basis of an AI-generated score. A qualified human reviewer must evaluate all results before taking any employment action.</p>
+    </div>
+    <div class="tou-section">
+      <h4>3. Anti-Bias &amp; Non-Discrimination</h4>
+      <ul>
+        <li>You must not use this tool to discriminate against candidates based on any protected characteristic (race, sex, age, disability, religion, national origin, or any other characteristic protected by applicable law).</li>
+        <li>You must review and remediate any bias warnings flagged by the JD bias scanner before using a score in any screening decision.</li>
+        <li>You must conduct periodic disparate impact testing as required by applicable employment AI regulations.</li>
+      </ul>
+    </div>
+    <div class="tou-section">
+      <h4>4. Regulatory Compliance</h4>
+      <p>You are responsible for ensuring your organisation's use of this tool complies with all applicable employment AI regulations in your jurisdiction, including but not limited to: EU AI Act (Annex III), EEOC/Title VII, NYC Local Law 144, GDPR Art. 22, and the UK Equality Act 2010.</p>
+    </div>
+    <div class="tou-section">
+      <h4>5. Data Handling</h4>
+      <ul>
+        <li>Resume and job profile text is processed in-browser only and is never transmitted to any external server.</li>
+        <li>You must not input data belonging to real candidates without their knowledge and consent.</li>
+        <li>Audit log data must be handled in accordance with your organisation's data retention and privacy policies.</li>
+      </ul>
+    </div>
+    <div class="tou-section">
+      <h4>6. Human-in-the-Loop Obligation</h4>
+      <p>You acknowledge that the Human-in-the-Loop (HITL) advisory displayed after each analysis is a mandatory governance control. Scores in the 45–65% range <strong>must</strong> be escalated to a human reviewer and must not be used as the sole basis for any screening decision.</p>
+    </div>
+    <div class="tou-section">
+      <h4>7. Limitation of Liability</h4>
+      <p>This tool is provided as-is. The tool developer (Vishveshwar Rao) accepts no liability for employment decisions made using this tool. The deploying organisation assumes full legal responsibility for compliance with applicable employment, privacy, and AI regulations.</p>
+    </div>
+
+    <div class="tou-checkbox-row">
+      <input type="checkbox" id="tou-agree-chk"/>
+      <label for="tou-agree-chk">I have read and understood the Terms of Use. I confirm I am an authorised HR professional and will use this tool in compliance with all applicable employment AI regulations and my organisation's policies.</label>
+    </div>
+    <div class="tou-actions">
+      <button class="btn-cancel" id="tou-decline">Decline</button>
+      <button class="auth-btn" id="tou-accept" disabled style="opacity:.5">Accept &amp; Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Access Code Modal ── -->
+<div id="code-modal">
+  <div class="code-box">
+    <h3>🔐 Access Code Required</h3>
+    <p>You have used all <strong>5 free analyses</strong>. Enter a valid access code to unlock up to <strong>25 analyses</strong> total.</p>
+    <div class="code-err" id="code-err"></div>
+    <div class="field-group">
+      <label for="code-input">Access Code</label>
+      <input type="text" id="code-input" placeholder="Enter your access code" autocomplete="off" style="text-transform:uppercase;letter-spacing:.1em"/>
+    </div>
+    <div class="code-actions">
+      <button class="btn-cancel" id="code-cancel">Cancel</button>
+      <button class="auth-btn" id="code-submit">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Nav bar (shown after login) ── -->
+<nav class="app-nav" id="app-nav">
+  <span class="nav-brand">✦ Job Fit Analyzer</span>
+  <div class="nav-user">
+    <span id="nav-username"></span>
+    <button class="nav-signout" id="enter-code-btn" style="display:none;border-color:#818cf8;color:#a5b4fc">🔐 Enter Access Code</button>
+    <button class="nav-signout" id="signout-btn">Sign out</button>
+  </div>
+</nav>
+
+<!-- ── Consent / AI Disclosure Modal ── -->
+<div id="consent-modal">
+  <div class="consent-box">
+    <h3>⚖️ AI Screening Disclosure</h3>
+    <p>This tool uses an <strong>AI-powered keyword matching algorithm</strong> to assess resume-to-job-profile fit. Before proceeding, please acknowledge the following:</p>
+    <ul>
+      <li>This score is <strong>advisory only</strong> — a human reviewer must make any final screening decision.</li>
+      <li>The analysis operates on <strong>skills and experience only</strong>. Demographic attributes (name, age, gender, address) are not scored.</li>
+      <li>Personal identifiers are stripped from the resume before analysis (de-proxying).</li>
+      <li>Results are logged for audit purposes in accordance with applicable employment AI regulations.</li>
+      <li>Candidates have the right to request a human review of any AI-assisted assessment.</li>
+    </ul>
+    <p style="font-size:11px;color:#94a3b8">Applicable frameworks: EU AI Act (Annex III), EEOC/Title VII, NYC Local Law 144, GDPR Art. 22</p>
+    <div class="consent-actions">
+      <button class="btn-cancel" id="consent-decline">Decline</button>
+      <button class="auth-btn" id="consent-accept">I Acknowledge — Proceed</button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Pre-Deployment Checklist Banner -->
+  <div id="predeploy-banner">
+    <div class="pd-hdr">
+      <span style="font-size:16px">⚠️</span>
+      <span class="pd-hdr-title">Pre-Deployment Checklist — Complete before using in live screening</span>
+      <button class="pd-hdr-dismiss" id="pd-dismiss" title="Dismiss (shown once per session)">✕</button>
+    </div>
+    <div class="pd-items">
+      <div class="pd-item">
+        <input type="checkbox" id="pd-c1"/>
+        <label for="pd-c1"><strong>Independent Bias Audit completed</strong> — An accredited third-party AEDT auditor has conducted an annual bias audit as required by NYC Local Law 144 and EU AI Act.</label>
+      </div>
+      <div class="pd-item">
+        <input type="checkbox" id="pd-c2"/>
+        <label for="pd-c2"><strong>Audit log migrated to server-side immutable store</strong> — Browser localStorage audit log has been replaced with a GDPR-compliant, append-only server-side audit database for production use.</label>
+      </div>
+      <div class="pd-item">
+        <input type="checkbox" id="pd-c3"/>
+        <label for="pd-c3"><strong>Credentials secured via identity provider</strong> — localStorage credentials replaced with Auth0, Azure AD, or equivalent IAM provider with proper password hashing.</label>
+      </div>
+      <div class="pd-item">
+        <input type="checkbox" id="pd-c4"/>
+        <label for="pd-c4"><strong>Candidate Privacy Notice published</strong> — GDPR Art. 13/14 compliant privacy notice covering AI use, data processing, and candidate rights is accessible to all candidates.</label>
+      </div>
+      <div class="pd-item">
+        <input type="checkbox" id="pd-c5"/>
+        <label for="pd-c5"><strong>EU AI Act conformity assessment completed</strong> — Technical documentation, conformity assessment, and human oversight measures documented per Annex III requirements.</label>
+      </div>
+      <div class="pd-item">
+        <input type="checkbox" id="pd-c6"/>
+        <label for="pd-c6"><strong>Disparate impact testing established</strong> — Periodic (minimum annual) 4/5ths rule testing across demographic groups in place per EEOC / Title VII requirements.</label>
+      </div>
+    </div>
+    <div class="pd-progress">
+      <span id="pd-count">0 / 6 completed</span>
+      <div class="pd-bar"><div class="pd-fill" id="pd-fill" style="width:0%"></div></div>
+      <span id="pd-status" style="font-weight:700;color:#d97706">Not Ready</span>
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="ai-badge"><span class="dot"></span> AI-Powered Analysis</div>
+    <div style="display:inline-flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center">
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5">EU AI Act</span>
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#fefce8;color:#854d0e;border:1px solid #fde047">EEOC / Title VII</span>
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#f0f9ff;color:#0369a1;border:1px solid #7dd3fc">GDPR Art. 22</span>
+      <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:#f0fdf4;color:#15803d;border:1px solid #86efac">NYC LL144</span>
+    </div>
+    <h1>Job Fit Analyzer</h1>
+    <p class="subtitle">Upload or paste a job profile and resume — get an intelligent match analysis with AI recommendations.<br><span style="font-size:11px;color:#94a3b8">Anti-bias screening · Human-in-the-loop · Regulatory compliant · Audit logged</span></p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">📋 Job Profile</div>
+      <div class="upload-zone" id="jd-drop">
+        <input type="file" id="jd-file" accept=".txt,.pdf,.doc,.docx" />
+        <span class="upload-icon">⬆</span>
+        <div class="upload-hint"><strong>Click to upload</strong> or drag &amp; drop</div>
+        <div class="upload-hint">.txt · .pdf · .doc / .docx</div>
+      </div>
+      <div class="file-badge" id="jd-badge"><span>📄</span><span class="fname" id="jd-fn"></span><button class="rm" id="jd-rm">✕</button></div>
+      <div class="div-or">or paste below</div>
+      <textarea id="jd" rows="9" placeholder="Paste the job profile here…"></textarea>
+    </div>
+    <div class="card">
+      <div class="card-label">👤 Resume</div>
+      <div class="upload-zone" id="res-drop">
+        <input type="file" id="res-file" accept=".txt,.pdf,.doc,.docx" />
+        <span class="upload-icon">⬆</span>
+        <div class="upload-hint"><strong>Click to upload</strong> or drag &amp; drop</div>
+        <div class="upload-hint">.txt · .pdf · .doc / .docx</div>
+      </div>
+      <div class="file-badge" id="res-badge"><span>📄</span><span class="fname" id="res-fn"></span><button class="rm" id="res-rm">✕</button></div>
+      <div class="div-or">or paste below</div>
+      <textarea id="res" rows="9" placeholder="Paste the resume text here…"></textarea>
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="go-btn">✦ Analyse with AI</button>
+    <button class="btn btn-clear" id="cl-btn">Clear</button>
+    <button class="share-btn" id="share-btn" style="display:none">🔗 Share Report</button>
+  </div>
+
+  <div id="result">
+    <div class="verdict-row">
+      <div class="verdict-top">
+        <div class="ring-wrap">
+          <svg class="ring" width="90" height="90" viewBox="0 0 90 90">
+            <circle class="ring-bg" cx="45" cy="45" r="37"/>
+            <circle class="ring-fg" id="ring-fg" cx="45" cy="45" r="37" stroke="#4f46e5" stroke-dasharray="232.478" stroke-dashoffset="232.478"/>
+            <text class="ring-label" id="ring-pct" x="45" y="43" fill="#1e293b">0%</text>
+            <text class="ring-sub" x="45" y="56">OVERALL</text>
+          </svg>
+        </div>
+        <div class="vinfo" id="vinfo">
+          <h2 id="v-title"></h2>
+          <p id="v-desc"></p>
+          <div class="mini-bars" id="mini-bars"></div>
+        </div>
+      </div>
+      <!-- 3-score fit row -->
+      <div class="fit-scores" id="fit-scores"></div>
+    </div>
+
+    <div class="ai-panel">
+      <div class="ai-hdr"><span class="pulse"></span> AI Insights &amp; Gap Analysis</div>
+      <div class="narrative" id="narrative"></div>
+      <div class="gap-matrix-title">📋 JD-to-Resume Gap Matrix</div>
+      <div id="gap-matrix-wrap"></div>
+    </div>
+
+    <div class="sec-grid" id="sec-grid"></div>
+
+    <!-- Evidence table -->
+    <div class="ev-wrap">
+      <div class="ev-legend">
+        <div class="ev-legend-item"><span>🟢</span> Strong evidence — exact match, well represented</div>
+        <div class="ev-legend-item"><span>🟡</span> Partial evidence — stem / alias match</div>
+        <div class="ev-legend-item"><span>🟠</span> Weak / indirect — fuzzy / low frequency</div>
+        <div class="ev-legend-item"><span>🔴</span> No evidence — absent from resume</div>
+      </div>
+      <div id="ev-body"></div>
+    </div>
+
+    <!-- Bias alert banner -->
+    <div class="bias-alert" id="bias-alert">
+      <div class="bias-alert-title">⚠️ Potentially Biased Language Detected in Job Profile</div>
+      <ul class="bias-alert-list" id="bias-alert-list"></ul>
+    </div>
+
+    <!-- Human-in-the-loop advisory band -->
+    <div class="hitl-band" id="hitl-band">
+      <span class="hitl-icon">🧑‍⚖️</span>
+      <div class="hitl-text" id="hitl-text"></div>
+    </div>
+
+    <!-- Counterfactual Score Simulation -->
+    <div class="cf-panel" id="cf-panel" style="display:none">
+      <div class="cf-hdr" id="cf-hdr">
+        <span style="font-size:15px">🔬</span>
+        <span class="cf-hdr-title">Counterfactual Score Simulation</span>
+        <span class="cf-toggle" id="cf-toggle">▼ Show</span>
+      </div>
+      <div class="cf-body" id="cf-body" style="display:none"></div>
+    </div>
+
+    <!-- Governance & Compliance Panel -->
+    <div class="gov-panel" id="gov-panel">
+      <div id="print-header"></div>
+      <div class="gov-hdr" id="gov-hdr">
+        <span style="font-size:16px">🏛️</span>
+        <span class="gov-hdr-title">AI Governance &amp; Regulatory Compliance Report</span>
+        <button class="export-pdf-btn" id="export-pdf-btn" title="Export this report as PDF">🖨️ Export PDF</button>
+        <span class="gov-toggle" id="gov-toggle">▼ Show</span>
+      </div>
+      <div class="gov-body" id="gov-body" style="display:none"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+  function g(id) { return document.getElementById(id); }
+
+  /* ══════════════════════════════════════════
+     AUTH — localStorage-backed sign up / login
+  ══════════════════════════════════════════ */
+  var USERS_KEY   = "jdm_users";
+  var SESSION_KEY = "jdm_session";
+  var FREE_LIMIT  = 5;
+
+  /* Access codes and the limits they unlock */
+  var ACCESS_CODES = {
+    "CODE25":       25,
+    "CODE50":       50,
+    "CODE100":      100,
+    "CODEINFINITY": Infinity
+  };
+
+  function getUsers() {
+    try { return JSON.parse(localStorage.getItem(USERS_KEY)) || {}; } catch(e) { return {}; }
+  }
+  function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+  function getSession() {
+    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch(e) { return null; }
+  }
+  function saveSession(user) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(user)); }
+  function clearSession() { sessionStorage.removeItem(SESSION_KEY); }
+
+  function limitFor(email) {
+    var users = getUsers();
+    var acct  = users[email];
+    if (acct && acct.codeLimit) return acct.codeLimit;
+    return FREE_LIMIT;
+  }
+  function usageLeft(email) {
+    var users = getUsers();
+    var used  = (users[email] && users[email].uses) || 0;
+    var lim   = limitFor(email);
+    return lim === Infinity ? Infinity : lim - used;
+  }
+  function navLabel(name, email) {
+    var left  = usageLeft(email);
+    var total = limitFor(email);
+    var leftStr  = left  === Infinity ? "∞" : left;
+    var totalStr = total === Infinity ? "∞" : total;
+    var ext   = total > FREE_LIMIT ? " (extended)" : "";
+    return name + " \u2014 " + leftStr + " of " + totalStr + " analysis" + (total === 1 ? "" : "es") + " remaining" + ext;
+  }
+
+  function showApp(user) {
+    g("auth-overlay").style.display = "none";
+    g("app-nav").classList.add("on");
+    g("nav-username").textContent = navLabel(user.name, user.email);
+    /* Show access code button in nav if free limit hit but not yet extended */
+    var left  = usageLeft(user.email);
+    var limit = limitFor(user.email);
+    var hitFree = left <= 0 && limit === FREE_LIMIT;
+    g("enter-code-btn").style.display = hitFree ? "inline-block" : "none";
+    /* Never disable the analyse button — modal handles the gate */
+    g("go-btn").disabled      = false;
+    g("go-btn").style.opacity = "";
+    g("go-btn").title         = "";
+  }
+
+  /* Check existing session */
+  var existing = getSession();
+  if (existing) { showApp(existing); }
+
+  /* Tab switching */
+  g("tab-login").addEventListener("click", function () {
+    g("tab-login").classList.add("active"); g("tab-signup").classList.remove("active");
+    g("form-login").classList.remove("hidden"); g("form-signup").classList.add("hidden");
+  });
+  g("tab-signup").addEventListener("click", function () {
+    g("tab-signup").classList.add("active"); g("tab-login").classList.remove("active");
+    g("form-signup").classList.remove("hidden"); g("form-login").classList.add("hidden");
+  });
+
+  function setErr(id, msg) {
+    var el = g(id); el.textContent = msg;
+    el.classList.toggle("on", !!msg);
+  }
+
+  /* Sign Up */
+  g("signup-btn").addEventListener("click", function () {
+    var name  = g("signup-name").value.trim();
+    var email = g("signup-email").value.trim().toLowerCase();
+    var pass  = g("signup-pass").value;
+    var pass2 = g("signup-pass2").value;
+    setErr("signup-err", "");
+    g("signup-ok").classList.remove("on");
+
+    if (!name)               return setErr("signup-err", "Please enter your full name.");
+    if (!email || !email.includes("@")) return setErr("signup-err", "Please enter a valid email.");
+    if (pass.length < 6)     return setErr("signup-err", "Password must be at least 6 characters.");
+    if (pass !== pass2)      return setErr("signup-err", "Passwords do not match.");
+
+    var users = getUsers();
+    if (users[email])        return setErr("signup-err", "An account with this email already exists.");
+
+    users[email] = { name: name, email: email, pass: pass };
+    saveUsers(users);
+    g("signup-ok").classList.add("on");
+    g("signup-name").value = g("signup-email").value = g("signup-pass").value = g("signup-pass2").value = "";
+    /* Auto-switch to login */
+    setTimeout(function () {
+      g("tab-login").click();
+      g("login-email").value = email;
+    }, 1200);
+  });
+
+  /* Log In */
+  g("login-btn").addEventListener("click", function () {
+    var email = g("login-email").value.trim().toLowerCase();
+    var pass  = g("login-pass").value;
+    setErr("login-err", "");
+
+    if (!email) return setErr("login-err", "Please enter your email.");
+    if (!pass)  return setErr("login-err", "Please enter your password.");
+
+    var users = getUsers();
+    var user  = users[email];
+    if (!user || user.pass !== pass) return setErr("login-err", "Invalid email or password.");
+
+    saveSession({ name: user.name, email: user.email });
+    showApp(user);
+  });
+
+  /* Enter key support */
+  [g("login-email"), g("login-pass")].forEach(function (el) {
+    el.addEventListener("keydown", function (e) { if (e.key === "Enter") g("login-btn").click(); });
+  });
+  [g("signup-name"), g("signup-email"), g("signup-pass"), g("signup-pass2")].forEach(function (el) {
+    el.addEventListener("keydown", function (e) { if (e.key === "Enter") g("signup-btn").click(); });
+  });
+
+  /* Sign Out */
+  g("signout-btn").addEventListener("click", function () {
+    clearSession();
+    g("app-nav").classList.remove("on");
+    g("auth-overlay").style.display = "flex";
+    g("login-email").value = g("login-pass").value = "";
+    setErr("login-err", "");
+  });
+
+  /* ── File readers ── */
+  function readTxt(file, cb) {
+    var r = new FileReader();
+    r.onload = function (e) { cb(null, e.target.result); };
+    r.onerror = function () { cb("Could not read file."); };
+    r.readAsText(file);
+  }
+
+  function readPDF(file, cb) {
+    var r = new FileReader();
+    r.onload = function (e) {
+      var buf = e.target.result;
+      function go() {
+        pdfjsLib.getDocument({ data: buf }).promise.then(function (pdf) {
+          var ps = [];
+          for (var i = 1; i <= pdf.numPages; i++) {
+            ps.push(pdf.getPage(i).then(function (p) {
+              return p.getTextContent().then(function (tc) {
+                return tc.items.map(function (x) { return x.str; }).join(" ");
+              });
+            }));
+          }
+          Promise.all(ps).then(function (t) { cb(null, t.join("\n")); }).catch(function () { cb("PDF extract error."); });
+        }).catch(function () { cb("PDF parse error."); });
+      }
+      if (window.pdfjsLib) { go(); return; }
+      var s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+      s.onload = function () {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        go();
+      };
+      s.onerror = function () { cb("Could not load PDF parser."); };
+      document.head.appendChild(s);
+    };
+    r.onerror = function () { cb("Read error."); };
+    r.readAsArrayBuffer(file);
+  }
+
+  function readDOCX(file, cb) {
+    var r = new FileReader();
+    r.onload = function (e) {
+      var buf = e.target.result;
+      function go() {
+        JSZip.loadAsync(buf).then(function (z) {
+          var d = z.file("word/document.xml");
+          if (!d) { cb("Invalid DOCX."); return; }
+          d.async("string").then(function (xml) {
+            var t = xml
+              .replace(/<w:p[ >]/g, "\n<w:p ")
+              .replace(/<[^>]+>/g, "")
+              .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+              .replace(/&quot;/g, '"').replace(/&#x[0-9A-Fa-f]+;/g, "");
+            cb(null, t);
+          }).catch(function () { cb("DOCX extract error."); });
+        }).catch(function () { cb("DOCX unzip error."); });
+      }
+      if (window.JSZip) { go(); return; }
+      var s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+      s.onload = go;
+      s.onerror = function () { cb("Could not load DOCX parser."); };
+      document.head.appendChild(s);
+    };
+    r.onerror = function () { cb("Read error."); };
+    r.readAsArrayBuffer(file);
+  }
+
+  /* ── Upload wiring ── */
+  function setupUpload(fid, did, bid, fnid, rmid, taid) {
+    var fi = g(fid), dz = g(did), ba = g(bid), fn = g(fnid), rm = g(rmid), ta = g(taid);
+    function handle(file) {
+      if (!file) return;
+      if (file.size > 100 * 1024 * 1024) { showErr("File too large."); return; }
+      var ext = file.name.toLowerCase().split(".").pop();
+      function done(err, txt) {
+        if (err) { showErr(err); return; }
+        ta.value = txt; fn.textContent = file.name; ba.classList.add("on");
+        g("err").style.display = "none";
+      }
+      if (ext === "txt") readTxt(file, done);
+      else if (ext === "pdf") readPDF(file, done);
+      else if (ext === "docx") readDOCX(file, done);
+      else if (ext === "doc") readTxt(file, done);
+      else showErr("Unsupported file. Use .txt .pdf .docx");
+    }
+    fi.addEventListener("change", function () { if (fi.files && fi.files[0]) handle(fi.files[0]); fi.value = ""; });
+    dz.addEventListener("dragover", function (e) { e.preventDefault(); dz.style.borderColor = "#6366f1"; });
+    dz.addEventListener("dragleave", function () { dz.style.borderColor = ""; });
+    dz.addEventListener("drop", function (e) {
+      e.preventDefault(); dz.style.borderColor = "";
+      if (e.dataTransfer.files[0]) handle(e.dataTransfer.files[0]);
+    });
+    rm.addEventListener("click", function (e) {
+      e.stopPropagation(); ta.value = ""; ba.classList.remove("on"); fn.textContent = "";
+    });
+  }
+
+  function showErr(m) { var e = g("err"); e.textContent = m; e.style.display = "block"; }
+  setupUpload("jd-file", "jd-drop", "jd-badge", "jd-fn", "jd-rm", "jd");
+  setupUpload("res-file", "res-drop", "res-badge", "res-fn", "res-rm", "res");
+
+  g("cl-btn").addEventListener("click", function () {
+    g("jd").value = g("res").value = "";
+    g("jd-badge").classList.remove("on"); g("res-badge").classList.remove("on");
+    g("result").style.display = g("err").style.display = "none";
+    g("bias-alert").classList.remove("on");
+    g("hitl-band").classList.remove("on");
+    g("cf-panel").style.display = "none";
+  });
+
+  /* ══════════════════════════════════════════
+     GOVERNANCE — Anti-Bias, Compliance & Audit
+  ══════════════════════════════════════════ */
+  var AUDIT_LOG_KEY = "jdm_audit_log";
+
+  /* ── JD Bias Scanner ── */
+  var BIAS_PATTERNS = [
+    { re: /\b(young|energetic|digital native|recent graduate|fresh graduate|new grad)\b/gi,   label: "Age proxy: implies preference for younger candidates (ADEA risk)" },
+    { re: /\b(he|him|his|guys|brotherhood|chairman|manpower|man-hours|man hours)\b/gi,        label: "Gendered language: use gender-neutral terms" },
+    { re: /\b(native speaker|native english|mother tongue)\b/gi,                              label: "National origin proxy: language fluency can be assessed without this" },
+    { re: /\b(no gaps|continuous employment|unbroken career)\b/gi,                            label: "Employment gap bias: penalises caregivers and those with health breaks" },
+    { re: /\b(prestigious university|ivy league|top school|tier.?1 university)\b/gi,          label: "Educational elitism: focus on skills, not school prestige" },
+    { re: /\b(physically fit|physically able|able.bodied)\b/gi,                               label: "Disability proxy: only list physical requirements genuinely necessary" },
+    { re: /\b(cultural fit|culture fit)\b/gi,                                                 label: "'Culture fit' is a known proxy for affinity bias — use 'values alignment'" },
+    { re: /\b(10\+?\s*years?|15\+?\s*years?|20\+?\s*years?)\s+experience\b/gi,               label: "Excessive experience requirement may constitute age discrimination (ADEA)" }
+  ];
+
+  function scanJdBias(jdText) {
+    var findings = [];
+    BIAS_PATTERNS.forEach(function (p) {
+      var matches = jdText.match(p.re);
+      if (matches) {
+        var unique = matches.filter(function (v, i, a) { return a.indexOf(v) === i; });
+        findings.push({ label: p.label, terms: unique });
+      }
+    });
+    return findings;
+  }
+
+  /* ── Resume De-proxying ── */
+  /* Strips personal identifiers before scoring so they cannot influence the match */
+  function deproxyResume(text) {
+    return text
+      .replace(/^[A-Z][a-z]+(?: [A-Z][a-z]+){1,3}$/gm, "")
+      .replace(/\d+\s+[A-Za-z\s]+(Street|St|Avenue|Ave|Road|Rd|Lane|Ln|Drive|Dr|Blvd|Way|Close|Court|Ct)[^\n]*/gi, "")
+      .replace(/(\+?\d[\d\s\-().]{7,}\d)/g, "")
+      .replace(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g, "")
+      .replace(/https?:\/\/[^\s]+/gi, "")
+      .replace(/\b(19[6-9]\d|200\d|201\d)\s*(graduation|graduated|batch|class of|cohort)\b/gi, "")
+      .replace(/\b(Mr\.?|Mrs\.?|Ms\.?|Dr\.?|Prof\.?)\s+[A-Z][a-z]+/g, "");
+  }
+
+  /* ── Audit Log ── */
+  function writeAuditLog(entry) {
+    try {
+      var log = JSON.parse(localStorage.getItem(AUDIT_LOG_KEY)) || [];
+      log.unshift(entry);
+      if (log.length > 100) log = log.slice(0, 100);
+      localStorage.setItem(AUDIT_LOG_KEY, JSON.stringify(log));
+    } catch(e) {}
+  }
+
+  /* ── Governance Panel Builder ── */
+  function buildGovernancePanel(score, biasFindings, jdTxt, resText, mandScore, prefScore) {
+    var isHitl = score >= 45 && score <= 65;
+    var deproxied = deproxyResume(resText);
+    var hasProxy = deproxied.length < resText.length * 0.97;
+
+    var compItems = [
+      {
+        label: "EU AI Act — High-Risk Classification (Annex III)",
+        status: "warn",
+        detail: "Employment-related AI tools fall under Annex III. Conformity assessment, human oversight, and audit logging are required before production deployment."
+      },
+      {
+        label: "EEOC / Title VII — Disparate Impact",
+        status: biasFindings.length > 0 ? "fail" : "pass",
+        detail: biasFindings.length > 0
+          ? biasFindings.length + " potentially biased term(s) detected in JD. Review and remediate before use in screening decisions."
+          : "No obvious proxy language detected in JD. Conduct periodic disparate impact testing (4/5ths rule) in production."
+      },
+      {
+        label: "NYC Local Law 144 — Automated Employment Decision Tool",
+        status: "warn",
+        detail: "Annual independent bias audit required before deploying any AEDT. Results must be publicly posted on the employer's website."
+      },
+      {
+        label: "GDPR Art. 22 — Automated Decision Rights",
+        status: "pass",
+        detail: "Score is advisory only — no fully automated decisions are made. Candidate disclosure modal presented. Right to human review preserved."
+      },
+      {
+        label: "UK Equality Act 2010",
+        status: "warn",
+        detail: "Indirect discrimination via AI criteria must be objectively justified. Document the legitimate aim for each mandatory requirement in the JD."
+      }
+    ];
+
+    var govItems = [
+      {
+        label: "Human-in-the-Loop Gate",
+        status: "pass",
+        detail: "Score is advisory only. No automated accept/reject decisions are made by this tool."
+      },
+      {
+        label: "Candidate Disclosure",
+        status: "pass",
+        detail: "AI Screening Disclosure modal presented before each analysis. Candidate informed of AI use and right to human review."
+      },
+      {
+        label: "Resume De-proxying",
+        status: hasProxy ? "pass" : "info",
+        detail: hasProxy
+          ? "Personal identifiers (name, contact details, address, graduation year) removed from resume before scoring."
+          : "No obvious personal identifiers detected in resume — de-proxying had minimal effect."
+      },
+      {
+        label: "Audit Log",
+        status: "pass",
+        detail: "Every analysis timestamped and stored with user ID, score, bias flags, and HITL flag. In production: use an immutable append-only audit store."
+      },
+      {
+        label: "Score Confidence Band (HITL)",
+        status: isHitl ? "warn" : "pass",
+        detail: isHitl
+          ? "Score (" + score + "%) is in the 45–65% uncertainty band. Human review is mandatory — do not use AI score as sole basis."
+          : "Score (" + score + "%) is outside the uncertainty band. Human review still required for all final decisions."
+      },
+      {
+        label: "Model Card / System Card",
+        status: "warn",
+        detail: "No model card present in this deployment. For production: document training data provenance, known limitations, intended and prohibited uses."
+      },
+      {
+        label: "Counterfactual Fairness",
+        status: "info",
+        detail: "This tool scores on skills and experience only. In production: validate that swapping names/pronouns in otherwise identical resumes yields identical scores."
+      },
+      {
+        label: "Data Minimisation (GDPR Art. 5)",
+        status: "info",
+        detail: "Raw resume text is not persisted beyond this session. In production: do not store resume content without explicit consent and a documented retention policy."
+      }
+    ];
+
+    function chipHtml(status) {
+      if (status === "pass") return "<span class='chip chip-pass'>✅ Pass</span>";
+      if (status === "warn") return "<span class='chip chip-warn'>⚠️ Action Required</span>";
+      if (status === "fail") return "<span class='chip chip-fail'>❌ Flag</span>";
+      return "<span class='chip chip-info'>ℹ️ Note</span>";
+    }
+
+    function renderItems(items) {
+      return items.map(function (item) {
+        return "<div class='gov-row'>" + chipHtml(item.status) +
+               "<div><strong style='color:#1e293b'>" + item.label + "</strong><br>" +
+               "<span style='color:#57606a'>" + item.detail + "</span></div></div>";
+      }).join("");
+    }
+
+    return "<div class='gov-section'>" +
+             "<div class='gov-section-title'>⚖️ Regulatory Compliance</div>" +
+             renderItems(compItems) +
+           "</div>" +
+           "<div class='gov-section'>" +
+             "<div class='gov-section-title'>🏛️ AI Governance Controls</div>" +
+             renderItems(govItems) +
+             "<button class='audit-log-btn' id='view-audit-btn'>📋 View Audit Log (last 10)</button>" +
+           "</div>";
+  }
+
+  /* ── Consent modal wiring ── */
+  var _consentPending = null;
+  var kwPref = {};   /* hoisted — populated during each analysis run, read by buildCounterfactual */
+  function openConsentModal(cb) {
+    _consentPending = cb;
+    g("consent-modal").classList.add("on");
+  }
+  g("consent-accept").addEventListener("click", function () {
+    g("consent-modal").classList.remove("on");
+    if (_consentPending) { var cb = _consentPending; _consentPending = null; cb(); }
+  });
+  g("consent-decline").addEventListener("click", function () {
+    g("consent-modal").classList.remove("on");
+    _consentPending = null;
+  });
+
+  /* ── Governance panel toggle (ignore click on export btn) ── */
+  g("gov-hdr").addEventListener("click", function (e) {
+    if (e.target && e.target.id === "export-pdf-btn") return;
+    var body = g("gov-body"), tog = g("gov-toggle");
+    var isOpen = body.style.display !== "none";
+    body.style.display = isOpen ? "none" : "grid";
+    tog.textContent = isOpen ? "▼ Show" : "▲ Hide";
+  });
+
+  /* ── Export Governance Report as PDF ── */
+  g("export-pdf-btn").addEventListener("click", function (e) {
+    e.stopPropagation();
+    /* Make sure the gov body is open */
+    var body = g("gov-body"), tog = g("gov-toggle");
+    body.style.display = "grid";
+    tog.textContent = "▲ Hide";
+    /* Populate print header */
+    var sess = getSession();
+    var ph = g("print-header");
+    ph.innerHTML = "<strong style='font-size:15px'>AI Governance &amp; Regulatory Compliance Report</strong>" +
+      "<br><span style='color:#57606a'>Generated: " + new Date().toLocaleString() +
+      (sess ? " &nbsp;·&nbsp; Analyst: " + sess.email : "") + "</span>";
+    window.print();
+    ph.innerHTML = "";
+  });
+
+  /* ── Audit log viewer ── */
+  document.addEventListener("click", function (e) {
+    if (e.target && e.target.id === "view-audit-btn") {
+      try {
+        var log = JSON.parse(localStorage.getItem(AUDIT_LOG_KEY)) || [];
+        if (!log.length) { alert("No audit entries yet."); return; }
+        var txt = log.slice(0, 10).map(function (entry, i) {
+          return (i + 1) + ". " + entry.ts +
+                 "\n   User: " + (entry.user || "anon") +
+                 " | Score: " + entry.score + "%" +
+                 " | Mandatory: " + (entry.mandScore !== null ? entry.mandScore + "%" : "N/A") +
+                 " | Bias flags: " + (entry.biasFlags || 0) +
+                 " | HITL: " + (entry.hitl ? "Yes" : "No");
+        }).join("\n\n");
+        alert("Audit Log — Last " + Math.min(log.length, 10) + " entries:\n\n" + txt);
+      } catch(err) { alert("Could not read audit log."); }
+    }
+  });
+
+  /* ══════════════════════════════════════════
+     CURATED TECH SKILLS DICTIONARY
+     - Multi-word phrases extracted first
+     - Single-word tech terms protected from stemming/stopword removal
+     - Canonical aliases map variants to one form
+  ══════════════════════════════════════════ */
+
+  /* Multi-word skill phrases (longest match first) */
+  var SKILL_PHRASES = [
+    "machine learning","deep learning","natural language processing","computer vision",
+    "artificial intelligence","data science","data engineering","data analysis","data analytics",
+    "big data","business intelligence","power bi","tableau desktop","google analytics",
+    "node js","node.js","react js","react.js","vue js","vue.js","next js","next.js",
+    "angular js","angularjs","express js","express.js","spring boot","asp.net","dot net",
+    ".net core","rest api","restful api","graphql api","web services","micro services",
+    "microservices","service mesh","event driven","event-driven",
+    "ci/cd","ci cd","continuous integration","continuous delivery","continuous deployment",
+    "test driven","test-driven","behavior driven","behaviour driven",
+    "object oriented","object-oriented","functional programming","design patterns",
+    "agile methodology","scrum master","product owner","kanban board",
+    "version control","source control","code review",
+    "public cloud","private cloud","hybrid cloud","cloud native","cloud computing",
+    "aws lambda","azure devops","azure functions","google cloud","gcp","amazon web services",
+    "kubernetes cluster","docker compose","docker swarm","infrastructure as code",
+    "terraform modules","ansible playbooks",
+    "relational database","nosql database","graph database","time series",
+    "sql server","mysql workbench","postgresql","mongodb atlas","redis cache",
+    "elastic search","elasticsearch","apache kafka","apache spark","apache hadoop",
+    "data warehouse","data lake","data pipeline","etl pipeline","data modeling",
+    "neural network","transformer model","large language model","llm","generative ai",
+    "prompt engineering","rag","retrieval augmented","vector database","embeddings",
+    "unit testing","integration testing","regression testing","end to end","e2e testing",
+    "load testing","performance testing","security testing","penetration testing",
+    "mobile development","ios development","android development","cross platform",
+    "react native","flutter","swift ui","jetpack compose",
+    "ui ux","user experience","user interface","product design","figma","adobe xd",
+    "project management","stakeholder management","risk management","change management",
+    "communication skills","problem solving","critical thinking","team collaboration",
+    "leadership skills","time management","attention to detail",
+
+    /* ── Implementation & Delivery phrases ── */
+    "go live","go-live","proof of concept","knowledge transfer","change management",
+    "user acceptance testing","system integration testing","end to end testing","smoke testing",
+    "regression testing","performance testing","load testing","stress testing","penetration testing",
+    "phased rollout","big bang","cutover plan","deployment plan","release management",
+    "hypercare support","post go-live","post-go-live","production support","pre-production",
+    "fit gap","fit-gap analysis","blueprint design","solution design","technical design",
+
+    /* ── Support & Operations phrases ── */
+    "root cause analysis","incident management","problem management","change management",
+    "service desk","help desk","ticketing system","knowledge base","run book",
+    "on call","on-call support","level 1","level 2","level 3","l1 support","l2 support","l3 support",
+    "mean time to recovery","mean time to resolve","service level agreement","service level objective",
+
+    /* ── Integration phrases ── */
+    "system integration","data integration","application integration","enterprise integration",
+    "api integration","rest api","soap api","web service","message queue","event streaming",
+    "real time integration","batch processing","data mapping","field mapping","interface design",
+    "integration testing","integration platform","middleware integration","point to point",
+    "hub and spoke","publish subscribe","request response","fire and forget",
+    "sap integration suite","sap cloud integration","sap pi","sap po","sap btp",
+    "iflow design","message transformation","error handling","retry mechanism","dead letter",
+
+    /* ── SAP phrases ── */
+    "sap s4hana","sap s/4hana","sap ecc","sap hana","sap fiori","sap btp",
+    "sap successfactors","sap ariba","sap concur","sap fieldglass",
+    "sap activate","sap implementation","sap rollout","sap upgrade","sap migration",
+    "abap development","abap programming","custom development","enhancement framework",
+    "user exit","badi","enhancement spot","smart forms","adobe forms",
+    "sap basis","sap security","sap authorizations","role design","profile management",
+    "functional consultant","technical consultant","solution architect","enterprise architect"
+  ];
+
+  /* Single-word tech terms — protected: never stemmed, never filtered as stopwords */
+  var TECH_TERMS = new Set([
+    "python","java","javascript","typescript","kotlin","swift","golang","rust","scala",
+    "ruby","perl","php","bash","powershell","matlab","julia","haskell","elixir","clojure",
+    "c","c#","c++","r","sql","nosql","html","css","xml","json","yaml","toml","graphql",
+    "react","angular","vue","svelte","django","flask","fastapi","spring","rails","laravel",
+    "express","nextjs","nuxtjs","gatsby","webpack","vite","babel","redux","mobx","rxjs",
+    "tensorflow","pytorch","keras","scikit","sklearn","numpy","pandas","matplotlib",
+    "opencv","spacy","nltk","huggingface","langchain","openai","llama","bert","gpt",
+    "aws","azure","gcp","heroku","vercel","netlify","firebase","supabase","cloudflare",
+    "docker","kubernetes","k8s","terraform","ansible","jenkins","github","gitlab","bitbucket",
+    "git","svn","jira","confluence","slack","figma","postman","swagger","grafana","kibana",
+    "nginx","apache","iis","redis","memcached","rabbitmq","kafka","celery","airflow",
+    "spark","hadoop","hive","flink","dbt","snowflake","bigquery","redshift","databricks",
+    "mysql","postgresql","postgres","sqlite","mongodb","cassandra","dynamodb","cosmos",
+    "oracle","mssql","mariadb","neo4j","influxdb","prometheus","datadog","splunk",
+    "linux","ubuntu","debian","centos","windows","macos","unix",
+    "rest","soap","grpc","oauth","jwt","saml","ldap","ssl","tls","https","ssh",
+    "agile","scrum","kanban","devops","devsecops","mlops","dataops","sre","itil",
+    "microservices","serverless","paas","iaas","saas","api","sdk","ide","oop","mvc",
+    "bi","etl","elt","crm","erp","sap","salesforce","servicenow","workday","tableau",
+    "powerbi","looker","qlik","excel","sharepoint","dynamics","powerautomate","powerplatform",
+    "selenium","cypress","jest","mocha","junit","pytest","testng","cucumber","appium",
+    "blockchain","solidity","web3","nft","defi","fintech","edtech","healthtech"
+  ]);
+
+  /* Alias map — normalises variants to canonical form */
+  var ALIASES = {
+    "js":"javascript","ts":"typescript","py":"python","rb":"ruby","rs":"rust",
+    "node":"node.js","nodejs":"node.js","reactjs":"react","vuejs":"vue","angularjs":"angular",
+    "k8s":"kubernetes","tf":"tensorflow","pt":"pytorch","pg":"postgresql",
+    "postgres":"postgresql","mssql":"sql server","ms sql":"sql server",
+    "powerbi":"power bi","power-bi":"power bi","dotnet":".net","asp.net":".net",
+    "sklearn":"scikit-learn","scikit":"scikit-learn","ml":"machine learning",
+    "ai":"artificial intelligence","nlp":"natural language processing",
+    "cv":"computer vision","dl":"deep learning","gen ai":"generative ai",
+    "genai":"generative ai","llms":"llm","rag":"retrieval augmented generation",
+    "ci":"continuous integration","cd":"continuous delivery",
+    "ux":"user experience","ui":"user interface","uiux":"ui ux",
+    "pm":"project management","ba":"business analysis",
+    "aws":"amazon web services","gcp":"google cloud"
+  };
+
+  /* ── Domain skill vocabulary (allowlist) ── */
+  /* Only words in this set OR in TECH_TERMS are kept as tokens.
+     Everything else (own, atleast, side, ensure, drive, seek …) is discarded. */
+  var DOMAIN_VOCAB = new Set([
+    /* ── Technical / Engineering ── */
+    "programming","coding","scripting","development","engineering","architecture","design",
+    "implementation","integration","deployment","automation","testing","debugging","optimization",
+    "performance","scalability","security","reliability","availability","monitoring","logging",
+    "backend","frontend","fullstack","full-stack","mobile","embedded","firmware","hardware",
+    "algorithm","data structure","database","schema","query","index","cache","queue","stream",
+    "encryption","authentication","authorization","networking","protocol","latency","throughput",
+    "concurrency","parallelism","threading","asynchronous","synchronous","webhook","event",
+    "pipeline","workflow","orchestration","containerization","virtualisation","virtualization",
+    "refactoring","maintainability","modularity","documentation","specification","prototype",
+
+    /* ── Implementation & Delivery ── */
+    "rollout","rollback","cutover","go-live","golive","hypercare","stabilization","stabilisation",
+    "phased","pilot","poc","proof-of-concept","mvp","beta","release","launch","deployment",
+    "installation","configuration","setup","provisioning","onboarding","offboarding",
+    "migration","upgrade","patch","hotfix","fix","resolution","workaround","retrofit",
+    "customization","customisation","localisation","localization","parameterisation","parameterization",
+    "build","package","bundle","compile","transpile","publish","artifact","binary","image",
+    "smoke-test","sanity","regression","uat","sit","oit","load-test","stress-test","pen-test",
+    "sign-off","acceptance","handover","handoff","transition","knowledge-transfer","hypercare",
+
+    /* ── Support & Operations ── */
+    "support","l1","l2","l3","tier1","tier2","tier3","helpdesk","servicedesk","ticketing",
+    "triage","diagnosis","troubleshooting","root-cause","rca","postmortem","sla","slo","sli",
+    "incident","problem","change","request","escalation","resolution","remediation","workaround",
+    "patch","maintenance","upgrade","monitoring","alerting","on-call","pagerduty","oncall",
+    "runbook","playbook","sop","procedure","checklist","knowledgebase","knowledge-base",
+    "availability","uptime","downtime","mttr","mttf","recovery","failover","backup","restore",
+    "capacity","sizing","tuning","profiling","tracing","observability","telemetry","logging",
+    "enduser","end-user","training","adoption","enablement","change-management","hypercare",
+
+    /* ── System Integration & Interfaces ── */
+    "interface","connector","adapter","middleware","broker","gateway","proxy","api-gateway",
+    "idoc","bapi","rfc","odata","edifact","edi","flat-file","csv","xml","json","payload",
+    "mapping","transformation","translation","enrichment","lookup","validation","filtering",
+    "inbound","outbound","synchronous","asynchronous","realtime","real-time","batch","streaming",
+    "point-to-point","hub-and-spoke","pubsub","pub-sub","event-driven","choreography","orchestration",
+    "iflow","integration-flow","integration-suite","integration-platform","ipaas",
+    "sap-integration","pi","po","cpi","hci","btp","scpi","is-advanced",
+
+    /* ── SAP & ERP specific ── */
+    "sap","erp","s4hana","s/4hana","ecc","r3","hana","fiori","ui5","sapui5","btp",
+    "abap","odata","bapi","idoc","rfc","smartforms","adobe-forms","workflow","brf+",
+    "sd","mm","fi","co","hr","pp","pm","qm","ps","wm","ewm","tm","mdg","mdm","slm",
+    "successfactors","sf","ec","recruiting","onboarding","lms","compensation","payroll",
+    "ariba","concur","fieldglass","hcm","srm","crm","c4c","cx","cpq","clm","ixp",
+    "solman","charm","lsmw","bdc","se38","se80","stms","sm30","sm35","se16","su01",
+    "functional","technical","basis","security","authorisation","authorization","role","profile",
+    "fit-gap","blueprint","realization","final-preparation","go-live","project-preparation",
+    "activate","asap","sap-activate","best-practice","scope-item",
+
+    /* ── Quality & Standards ── */
+    "iso","cmmi","pmp","prince2","togaf","itil","cobit","nist","gdpr","hipaa","sox","pci",
+    "certification","accreditation","audit","compliance","assessment","review","inspection",
+    "quality","defect","bug","issue","risk","control","mitigation","remediation",
+
+    /* ── Data / Analytics / AI ── */
+    "analytics","visualization","modelling","modeling","forecasting","prediction","classification",
+    "clustering","regression","segmentation","recommendation","anomaly","detection","insight",
+    "reporting","dashboard","metrics","kpi","statistics","probability","hypothesis","experiment",
+    "training","inference","evaluation","accuracy","precision","recall","validation","dataset",
+    "annotation","labelling","labeling","preprocessing","augmentation","fine-tuning","finetuning",
+    "retrieval","embedding","tokenization","vectorization","summarization","translation",
+    "extraction","transformation","loading","ingestion","partitioning","replication","sharding",
+
+    /* ── Cloud / DevOps / Infrastructure ── */
+    "provisioning","configuration","networking","firewall","loadbalancer","autoscaling",
+    "observability","alerting","incident","remediation","backup","recovery","failover",
+    "migration","modernization","optimization","cost","governance","compliance","audit",
+    "repository","branching","merging","release","versioning","artifact","registry","cluster",
+
+    /* ── Management / Leadership ── */
+    "leadership","management","strategy","planning","execution","coordination","collaboration",
+    "communication","presentation","negotiation","facilitation","mentoring","coaching",
+    "onboarding","hiring","recruitment","retention","performance","appraisal","feedback",
+    "stakeholder","budgeting","forecasting","roadmap","prioritization","delegation","escalation",
+    "governance","policy","compliance","risk","audit","reporting","accountability","ownership",
+    "decision","alignment","transformation","innovation","initiative","delivery","programme",
+    "program","portfolio","product","vision","mission","objective","outcome","milestone",
+
+    /* ── Project / Process ── */
+    "estimation","sprint","backlog","grooming","retrospective","standup","velocity","burndown",
+    "release","deployment","hotfix","patch","rollback","rollout","cutover","handover",
+    "documentation","requirement","specification","acceptance","criteria","sign-off","approval",
+    "testing","validation","verification","traceability","sla","slo","sli","rca","postmortem",
+    "process","procedure","workflow","automation","improvement","optimisation","optimization",
+    "lean","sixsigma","bpm","itsm","change","incident","problem","request","service","support",
+
+    /* ── Soft skills (domain-relevant only) ── */
+    "analytical","communication","collaborative","interpersonal","adaptability","creativity",
+    "initiative","proactive","strategic","detail-oriented","organised","organized","self-motivated",
+    "multitasking","prioritization","resilience","empathy","integrity","accountability"
+  ]);
+
+  /* ── NLP ── */
+
+  /* Normalise text and extract skill phrases + individual tokens */
+  function extractTokens(text) {
+    var lower = text.toLowerCase()
+      .replace(/['']/g, "")
+      .replace(/[^a-z0-9#+.\-\/\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    var tokens = [];
+    var remaining = lower;
+
+    /* 1. Extract multi-word skill phrases first */
+    var phraseSet = new Set();
+    SKILL_PHRASES.forEach(function (ph) {
+      var re = new RegExp("\\b" + ph.replace(/[.+]/g, "\\$&") + "\\b", "gi");
+      if (re.test(remaining)) {
+        var canonical = ALIASES[ph] || ph;
+        phraseSet.add(canonical);
+        remaining = remaining.replace(re, " ");
+      }
+    });
+    phraseSet.forEach(function (p) { tokens.push(p); });
+
+    /* 2. Tokenise remaining words — ALLOWLIST only */
+    var words = remaining.split(/\s+/);
+    words.forEach(function (w) {
+      if (!w || w.length < 2) return;
+      var aliased = ALIASES[w] || w;
+      /* Keep: known tech term */
+      if (TECH_TERMS.has(aliased) || TECH_TERMS.has(w)) {
+        tokens.push(aliased); return;
+      }
+      /* Keep: known domain vocab word */
+      if (DOMAIN_VOCAB.has(w) || DOMAIN_VOCAB.has(aliased)) {
+        tokens.push(aliased || w); return;
+      }
+      /* Drop everything else — generic words, filler, noise */
+    });
+
+    return tokens;
+  }
+
+  function tok(text) { return extractTokens(text); }
+  function freq(tokens) { var m = {}; tokens.forEach(function (t) { m[t] = (m[t] || 0) + 1; }); return m; }
+
+  /* Stem only non-tech words */
+  function stem(w) {
+    if (TECH_TERMS.has(w)) return w;          /* never stem tech terms */
+    if (w.indexOf(" ") !== -1) return w;       /* never stem phrases */
+    if (w.length < 4) return w;
+    if (w.endsWith("sses")) w = w.slice(0, -2);
+    else if (w.endsWith("ies")) w = w.slice(0, -2);
+    else if (!w.endsWith("ss") && w.endsWith("s") && w.length > 4) w = w.slice(0, -1);
+    if (w.endsWith("eed") && w.length > 4) w = w.slice(0, -1);
+    else if (w.endsWith("ing") && w.length > 5) w = w.slice(0, -3);
+    else if (w.endsWith("ed") && w.length > 4) w = w.slice(0, -2);
+    if (w.endsWith("y") && w.length > 4) w = w.slice(0, -1) + "i";
+    var s2 = [["ational","ate"],["tional","tion"],["enci","ence"],["anci","ance"],["izer","ize"],["ising","ise"],["izing","ize"],["alism","al"],["iveness","ive"],["fulness","ful"],["ousness","ous"],["aliti","al"],["iviti","ive"],["biliti","ble"]];
+    for (var i = 0; i < s2.length; i++) { if (w.endsWith(s2[i][0]) && w.length > s2[i][0].length + 2) { w = w.slice(0, -s2[i][0].length) + s2[i][1]; break; } }
+    var s3 = [["icate","ic"],["ative",""],["alize","al"],["iciti","ic"],["ical","ic"],["ful",""],["ness",""]];
+    for (var j = 0; j < s3.length; j++) { if (w.endsWith(s3[j][0]) && w.length > s3[j][0].length + 2) { w = w.slice(0, -s3[j][0].length) + s3[j][1]; break; } }
+    var s4 = ["ement","ment","ance","ence","able","ible","ant","ent","ion","ism","ate","iti","ous","ive","ize","ise","al","er","ic"];
+    for (var k = 0; k < s4.length; k++) { if (w.endsWith(s4[k]) && w.length > s4[k].length + 3) { w = w.slice(0, -s4[k].length); break; } }
+    return w;
+  }
+
+  function simScore(a, b) {
+    if (a === b) return 1;
+    var la = a.length, lb = b.length;
+    if (!la || !lb) return 0;
+    /* Don't fuzzy-match tech terms — must be exact or stem */
+    if (TECH_TERMS.has(a) || TECH_TERMS.has(b)) return a === b ? 1 : 0;
+    /* Don't fuzzy-match phrases */
+    if (a.indexOf(" ") !== -1 || b.indexOf(" ") !== -1) return a === b ? 1 : 0;
+    if (Math.abs(la - lb) > Math.max(la, lb) * 0.4) return 0;
+    var pv = [], cv = [];
+    for (var j = 0; j <= lb; j++) pv[j] = j;
+    for (var i = 1; i <= la; i++) {
+      cv[0] = i;
+      for (var jj = 1; jj <= lb; jj++) {
+        cv[jj] = a[i - 1] === b[jj - 1] ? pv[jj - 1] : 1 + Math.min(pv[jj - 1], pv[jj], cv[jj - 1]);
+      }
+      var tmp = pv; pv = cv; cv = tmp;
+    }
+    return 1 - pv[lb] / Math.max(la, lb);
+  }
+
+  function findMatch(w, rk, rs) {
+    if (rk.has(w)) return { m: true, rw: w, how: "exact" };
+    /* Alias check — try canonical form */
+    var aliased = ALIASES[w];
+    if (aliased && rk.has(aliased)) return { m: true, rw: aliased, how: "exact" };
+    /* Stem match — skip for tech terms and phrases */
+    var ws = stem(w);
+    if (ws.length >= 3 && rs[ws]) return { m: true, rw: rs[ws], how: "stem" };
+    /* Fuzzy — only for non-tech words >= 5 chars */
+    if (!TECH_TERMS.has(w) && w.indexOf(" ") === -1 && w.length >= 5) {
+      var best = 0, bw = null;
+      rk.forEach(function (r) {
+        if (r.length < 4 || TECH_TERMS.has(r)) return;
+        var s = simScore(w, r);
+        if (s > best) { best = s; bw = r; }
+      });
+      if (best >= 0.8) return { m: true, rw: bw, how: "fuzzy" };
+    }
+    return { m: false, rw: null, how: null };
+  }
+
+  /* ══════════════════════════════════════════
+     KEYWORD WEIGHT ENGINE
+     3 = Critical / specific tool, cert, methodology
+     2 = Important domain skill / framework
+     1 = General domain vocabulary (default)
+     Weights are symmetric: same key gets same weight
+     regardless of which side (JD or resume) it appears.
+  ══════════════════════════════════════════ */
+  var WEIGHT_3 = new Set([
+    /* ── Change Management methodologies ── */
+    "prosci","adkar","kotter","lewin","mckinsey 7s","nudge theory","bridges transition",
+    "change management certification","prosci certification","ccmp","acmp",
+    /* ── Project / Programme certifications ── */
+    "pmp","prince2","pgmp","pmi-acp","capm","msp","p3o","apm","ipma",
+    "safe","scaled agile","less","nexus","scrum alliance","csm","cspo","csd","csk",
+    /* ── Architecture / Design certifications ── */
+    "togaf","zachman","feaf","dodaf","archimate","itil v4","itil 4","cobit 5","cobit 2019",
+    /* ── Cloud certifications ── */
+    "aws certified","azure certified","gcp certified","cka","ckad","cks",
+    "solutions architect","cloud practitioner","devops professional","security specialty",
+    /* ── Data / AI specific ── */
+    "tensorflow","pytorch","scikit-learn","huggingface","langchain","openai","llama","bert","gpt",
+    "databricks","snowflake","dbt","apache spark","apache kafka","apache airflow",
+    /* ── SAP specific modules and tools ── */
+    "s4hana","s/4hana","successfactors","sap btp","sap cpi","sap integration suite",
+    "abap","fiori","sapui5","hana","sap activate","solman","charm","sap ariba","sap concur",
+    "fit-gap","blueprint","sap basis","sap security",
+    /* ── Integration platforms ── */
+    "mulesoft","boomi","tibco","informatica","azure integration services",
+    "sap integration suite","ibm mq","ibm ace","ibm app connect","webmethods",
+    "talend","azure data factory","aws glue","google dataflow",
+    /* ── Specific languages / runtimes (critical) ── */
+    "python","java","typescript","kotlin","golang","rust","scala",
+    "react","angular","vue","spring boot","django","fastapi","node.js",
+    "kubernetes","docker","terraform","ansible","jenkins","github actions","gitlab ci",
+    /* ── Security / Compliance standards ── */
+    "iso 27001","soc 2","gdpr","hipaa","pci dss","nist","fedramp","fips",
+    "owasp","zero trust","sase","soar","siem","dlp","iam","pam","cas",
+    /* ── ERP/CRM platforms ── */
+    "salesforce","servicenow","workday","oracle","microsoft dynamics","sap ecc",
+    "hubspot","zendesk","jira","confluence","azure devops",
+    /* ── Data platforms ── */
+    "snowflake","bigquery","redshift","databricks","azure synapse","power bi","tableau",
+    "looker","qlik","dbt","fivetran","airbyte","stitch"
+  ]);
+
+  var WEIGHT_2 = new Set([
+    /* ── Engineering practices ── */
+    "microservices","serverless","event-driven","ci/cd","devops","sre","devsecops","mlops",
+    "infrastructure as code","cloud native","zero downtime","blue-green","canary",
+    "api gateway","service mesh","container orchestration","observability","chaos engineering",
+    /* ── Architecture patterns ── */
+    "solution architecture","enterprise architecture","domain-driven design","ddd",
+    "cqrs","event sourcing","saga pattern","strangler fig","hexagonal",
+    "12-factor","clean architecture","onion architecture",
+    /* ── Data engineering ── */
+    "data pipeline","etl pipeline","data warehouse","data lake","data mesh","data lakehouse",
+    "real-time streaming","batch processing","data modeling","data governance",
+    "master data management","mdm","data quality","data lineage","data catalog",
+    /* ── AI / ML practices ── */
+    "machine learning","deep learning","natural language processing","computer vision",
+    "generative ai","llm","prompt engineering","rag","retrieval augmented generation",
+    "model deployment","mlflow","feature engineering","hyperparameter tuning",
+    /* ── Management skills ── */
+    "stakeholder management","change management","risk management","programme management",
+    "portfolio management","product management","delivery management","agile coaching",
+    "people management","performance management","budget management","vendor management",
+    /* ── Process / Delivery ── */
+    "agile","scrum","kanban","safe","lean","six sigma","design thinking",
+    "sprint planning","backlog grooming","retrospective","roadmap","okr",
+    /* ── Integration patterns ── */
+    "system integration","api integration","middleware","iflow","idoc","bapi","odata",
+    "edi","edifact","flat-file","pub-sub","event streaming","message queue",
+    /* ── Support / Ops ── */
+    "incident management","problem management","root cause analysis","sla","slo",
+    "production support","hypercare","rollout","cutover","go-live","knowledge transfer",
+    "user acceptance testing","uat","deployment","release management"
+  ]);
+
+  /* getWeight: returns 3, 2, or 1 for any keyword */
+  function getWeight(w) {
+    var lw = w.toLowerCase();
+    if (WEIGHT_3.has(lw)) return 3;
+    if (WEIGHT_2.has(lw)) return 2;
+    /* Also give weight 3 to exact TECH_TERMS (specific tools) */
+    if (TECH_TERMS.has(lw)) return 2;
+    /* Phrases (multi-word) always at least weight 2 */
+    if (lw.indexOf(" ") !== -1) return 2;
+    return 1;
+  }
+
+  /* ── Colour helpers ── */
+  function cc(s) { return s >= 70 ? "hi" : s >= 40 ? "mi" : "lo"; }
+  function bc(s) { return s >= 70 ? "bhi" : s >= 40 ? "bmi" : "blo"; }
+  function hx(s) { return s >= 70 ? "#16a34a" : s >= 40 ? "#d97706" : "#dc2626"; }
+
+  /* ── Section scorer ── */
+  var SPAT = {
+    Skills: /\b(skills?|technologies|tech stack|tools|languages|frameworks|competencies|proficiencies)\b/i,
+    Experience: /\b(experience|work history|employment|positions?|roles?|career)\b/i,
+    Education: /\b(education|degree|university|college|academic|certification|training)\b/i
+  };
+  function secScore(name, jdT, resT) {
+    var re = SPAT[name];
+    function extract(t) {
+      var ls = t.split("\n"), out = [], on = false;
+      for (var i = 0; i < ls.length; i++) {
+        if (re.test(ls[i])) on = true;
+        else if (on && /^[A-Z][A-Z\s]{3,}$/.test(ls[i].trim()) && ls[i].trim().length > 3) on = false;
+        if (on) out.push(ls[i]);
+      }
+      return out.length > 3 ? out.join(" ") : t;
+    }
+    var jf = freq(tok(extract(jdT))), rf2 = freq(tok(extract(resT)));
+    var jk = Object.keys(jf), rk2 = new Set(Object.keys(rf2)), rs2 = {};
+    rk2.forEach(function (w) { var s = stem(w); if (!rs2[s]) rs2[s] = w; });
+    var h = 0;
+    jk.forEach(function (w) { if (findMatch(w, rk2, rs2).m) h++; });
+    return jk.length === 0 ? 0 : Math.round(h / jk.length * 100);
+  }
+
+  /* ══════════════════════════════════════════
+     DOMAIN TAXONOMY — maps keywords to skill domains
+     Used for grouping gap matrix rows by category.
+  ══════════════════════════════════════════ */
+  var DOMAIN_MAP = [
+    { domain: "Change Management",      re: /prosci|adkar|kotter|lewin|ccmp|acmp|change management|change agent|organizational change|ocm|stakeholder (engagement|adoption)|resistance|sponsorship|readiness|user adoption|enablement/i },
+    { domain: "Project / Programme",    re: /pmp|prince2|pgmp|msp|agile|scrum|kanban|safe|sprint|backlog|roadmap|okr|milestone|delivery|programme|portfolio|project management|waterfall|lean|six sigma|retrospective/i },
+    { domain: "Technical — Languages",  re: /python|java\b|javascript|typescript|kotlin|golang|rust|scala|ruby|php|bash|powershell|c\+\+|c#|\br\b|sql|html|css/i },
+    { domain: "Technical — Frameworks", re: /react|angular|vue|spring|django|flask|fastapi|node\.?js|nextjs|laravel|rails|express|svelte|flutter|react native/i },
+    { domain: "Cloud & DevOps",         re: /aws|azure|gcp|kubernetes|docker|terraform|ansible|jenkins|ci\/cd|devops|devsecops|github|gitlab|cloud native|infrastructure as code|serverless|helm|argo/i },
+    { domain: "Data & Analytics",       re: /data (science|engineering|analysis|analytics|pipeline|warehouse|lake|modeling|governance|quality)|etl|elt|dbt|snowflake|bigquery|redshift|databricks|tableau|power bi|looker|spark|kafka|airflow/i },
+    { domain: "AI / ML",                re: /machine learning|deep learning|nlp|natural language|computer vision|generative ai|llm|pytorch|tensorflow|scikit|huggingface|langchain|prompt engineering|rag|bert|gpt|mlflow|feature engineering/i },
+    { domain: "SAP & ERP",              re: /sap|s\/4hana|s4hana|abap|fiori|sapui5|hana|btp|successfactors|ariba|concur|fit.gap|blueprint|solman|idoc|bapi|odata|ecc|erp|workday|oracle|dynamics/i },
+    { domain: "Integration",            re: /integration|iflow|middleware|mulesoft|boomi|tibco|informatica|api gateway|rest api|soap|grpc|edifact|edi|pub.sub|event.driven|message queue|kafka|rabbitmq|ipaas|cpi|scpi/i },
+    { domain: "Architecture",           re: /architecture|togaf|zachman|solution design|enterprise architect|domain.driven|microservices|event sourcing|cqrs|design pattern|hexagonal|12.factor/i },
+    { domain: "Security & Compliance",  re: /security|gdpr|hipaa|sox|pci|iso 27001|soc 2|nist|owasp|zero trust|iam|pam|authentication|authorization|encryption|ssl|tls|penetration|vulnerability/i },
+    { domain: "Support & Operations",   re: /support|l1|l2|l3|sla|slo|incident|problem management|root cause|rca|runbook|playbook|on.call|monitoring|alerting|observability|mttr|helpdesk|servicedesk/i },
+    { domain: "Delivery & Rollout",     re: /rollout|cutover|go.live|hypercare|uat|sit|deployment|release|migration|upgrade|knowledge transfer|handover|stabilization|production support|post.go.live/i },
+    { domain: "Leadership & Mgmt",      re: /leadership|stakeholder|people management|coaching|mentoring|facilitation|negotiation|budget|vendor management|hiring|retention|appraisal|performance management/i },
+    { domain: "Certifications",         re: /pmp|prince2|csm|cspo|togaf|itil|aws certified|azure certified|cka|prosci|ccmp|safe|pgmp|cissp|cisa|comptia/i }
+  ];
+
+  function getDomain(kw) {
+    var lw = kw.toLowerCase();
+    for (var i = 0; i < DOMAIN_MAP.length; i++) {
+      if (DOMAIN_MAP[i].re.test(lw)) return DOMAIN_MAP[i].domain;
+    }
+    return "General";
+  }
+
+  /* ── Gap type classifier ── */
+  function gapType(matchObj) {
+    if (!matchObj) return "Absent";
+    if (matchObj.how === "exact" && (matchObj.resFreq || 0) >= 2) return "Well covered";
+    if (matchObj.how === "exact") return "Mentioned once";
+    if (matchObj.how === "stem")  return "Implied (stem)";
+    if (matchObj.how === "fuzzy") return "Weakly implied";
+    return "Absent";
+  }
+
+  /* ── Severity: based on weight + mandatory/preferred + gap type ── */
+  function severity(wt, req, gt) {
+    if (gt === "Well covered")    return "low";
+    if (gt === "Mentioned once")  return req === "mandatory" ? "medium" : "low";
+    if (gt === "Implied (stem)")  return req === "mandatory" && wt >= 3 ? "high" : "medium";
+    if (gt === "Weakly implied")  return req === "mandatory" ? "high" : "medium";
+    /* Absent */
+    if (wt === 3 && req === "mandatory") return "critical";
+    if (wt >= 2 || req === "mandatory")  return "high";
+    return "medium";
+  }
+
+  /* ── Targeted improvement suggestion per gap ── */
+  function suggestion(kw, domain, gt, req, wt, resText) {
+    var lw = kw.toLowerCase();
+    /* Already well covered — no action needed */
+    if (gt === "Well covered") return "No action needed — well evidenced in resume.";
+
+    /* Domain-specific tailored suggestions */
+    if (domain === "Change Management") {
+      if (lw.includes("prosci") || lw.includes("adkar"))
+        return "Add a bullet referencing your Prosci/ADKAR experience: e.g. 'Delivered ADKAR-based change impact assessment for 500+ users.'";
+      if (lw.includes("adoption") || lw.includes("enablement"))
+        return "Describe a specific user adoption initiative: how many users, channels used (training, comms, coaching), and adoption rate achieved.";
+      return "Quantify a change initiative: scope, stakeholder levels engaged, resistance managed, and measurable adoption outcome.";
+    }
+    if (domain === "Certifications") {
+      if (gt === "Absent" && req === "mandatory")
+        return "This certification appears mandatory. If you hold it, add it explicitly to your Education/Certifications section.";
+      return "Mention this certification explicitly in a dedicated Certifications section with date obtained.";
+    }
+    if (domain === "Technical — Languages" || domain === "Technical — Frameworks") {
+      if (gt === "Absent")
+        return "If you have experience with " + kw + ", add a specific project bullet: 'Built X using " + kw + " to achieve Y.'";
+      if (gt === "Implied (stem)" || gt === "Weakly implied")
+        return "Use the exact term '" + kw + "' — ATS systems may not recognise variants. Add it to your Skills section.";
+      return "Expand your " + kw + " experience with a concrete deliverable and business outcome.";
+    }
+    if (domain === "SAP & ERP") {
+      if (gt === "Absent")
+        return "Add '" + kw + "' explicitly to your Skills section and reference it in at least one project bullet with context (module, version, scope).";
+      return "Strengthen " + kw + " evidence: specify version/release, implementation phase you led, and number of users/entities affected.";
+    }
+    if (domain === "Integration") {
+      if (gt === "Absent")
+        return "Describe a specific integration you designed or built using " + kw + ": source/target systems, message volume, and business outcome.";
+      return "Reinforce " + kw + " by citing an integration scenario: protocol used, error handling approach, and throughput or SLA met.";
+    }
+    if (domain === "Cloud & DevOps") {
+      if (gt === "Absent")
+        return "Add " + kw + " to your Skills section. If used on a project, describe infrastructure provisioned, scale, and cost/performance outcome.";
+      return "Quantify your " + kw + " usage: environment size, services used, and an outcome (e.g. reduced deployment time by X%).";
+    }
+    if (domain === "Data & Analytics") {
+      if (gt === "Absent")
+        return "Add " + kw + " to your technical skills. If used, describe the data volume, pipeline or model built, and business value delivered.";
+      return "Strengthen " + kw + " evidence with a concrete result: dataset size, latency improvement, or business decision enabled.";
+    }
+    if (domain === "AI / ML") {
+      if (gt === "Absent")
+        return "Reference a project using " + kw + ": model type, accuracy achieved, deployment method, and business impact.";
+      return "Expand your " + kw + " mention with a measurable outcome (e.g. model accuracy, inference speed, user adoption).";
+    }
+    if (domain === "Architecture") {
+      return "Add an architecture diagram reference or describe a specific design decision using " + kw + " — include trade-offs considered and outcome.";
+    }
+    if (domain === "Project / Programme") {
+      if (gt === "Absent")
+        return "Reference a specific project where you applied " + kw + ": team size, budget scope, delivery timeline, and outcome.";
+      return "Strengthen " + kw + " evidence: add scale metrics (team size, budget, timeline) and a measurable delivery outcome.";
+    }
+    if (domain === "Delivery & Rollout") {
+      if (lw.includes("go-live") || lw.includes("cutover") || lw.includes("hypercare"))
+        return "Describe your go-live role: cutover plan ownership, hypercare duration, issue resolution rate, and user base size.";
+      return "Quantify your " + kw + " experience: scope, timeline, user count, and any measurable post-deployment outcome.";
+    }
+    if (domain === "Leadership & Mgmt") {
+      if (gt === "Absent")
+        return "Add a leadership example: team size managed, decision made, and outcome — avoid vague phrases like 'led a team'.";
+      return "Strengthen leadership evidence with metrics: team size, budget managed, retention rate, or business outcome delivered.";
+    }
+    if (domain === "Support & Operations") {
+      return "Add an SLA/ops example referencing " + kw + ": ticket volumes handled, SLA % met, MTTR achieved, or process improvement made.";
+    }
+    if (domain === "Security & Compliance") {
+      return "Reference a specific " + kw + " compliance initiative or audit you contributed to — include scope, findings addressed, and sign-off outcome.";
+    }
+    /* Generic fallbacks by gap type */
+    if (gt === "Mentioned once")
+      return "'" + kw + "' appears only once — reinforce with a specific bullet: context, actions taken, and measurable result.";
+    if (gt === "Implied (stem)" || gt === "Weakly implied")
+      return "Use the exact term '" + kw + "' in your resume. Paraphrasing may be missed by ATS and reviewers. Add it to Skills and one project bullet.";
+    if (gt === "Absent" && req === "mandatory")
+      return "'" + kw + "' is a mandatory requirement not found in your resume. Add it where genuinely applicable with a concrete context and outcome.";
+    return "Add '" + kw + "' with a concrete example: what you did, the scale, and the measurable outcome.";
+  }
+
+  /* ── Build gap matrix rows ── */
+  function buildGapMatrix(matched, missing, jf, rf, mandScore, prefScore, score, sec) {
+    /* Combine all JD keywords with their match status */
+    var allRows = [];
+    matched.forEach(function (m) {
+      var gt = gapType({ how: m.how, resFreq: rf[m.res] || 0 });
+      var sev = severity(m.wt, m.req, gt);
+      allRows.push({ kw: m.jd, domain: getDomain(m.jd), gt: gt, sev: sev,
+                     wt: m.wt, req: m.req, matched: true, resWord: m.res,
+                     sugg: suggestion(m.jd, getDomain(m.jd), gt, m.req, m.wt, "") });
+    });
+    missing.forEach(function (m) {
+      var gt = "Absent";
+      var sev = severity(m.wt, m.req, gt);
+      allRows.push({ kw: m.kw, domain: getDomain(m.kw), gt: gt, sev: sev,
+                     wt: m.wt, req: m.req, matched: false, resWord: null,
+                     sugg: suggestion(m.kw, getDomain(m.kw), gt, m.req, m.wt, "") });
+    });
+
+    /* Sort: critical first, then high, medium, low — then by weight desc */
+    var sevOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    allRows.sort(function (a, b) {
+      var sd = sevOrder[a.sev] - sevOrder[b.sev];
+      if (sd !== 0) return sd;
+      return b.wt - a.wt;
+    });
+
+    /* Group by domain */
+    var grouped = {}, domainOrder = [];
+    allRows.forEach(function (row) {
+      if (!grouped[row.domain]) { grouped[row.domain] = []; domainOrder.push(row.domain); }
+      grouped[row.domain].push(row);
+    });
+
+    /* Severity display */
+    function sevHtml(sev) {
+      if (sev === "critical") return "<span class='sev-critical'>🔴 Critical</span>";
+      if (sev === "high")     return "<span class='sev-high'>🟠 High</span>";
+      if (sev === "medium")   return "<span class='sev-medium'>🟡 Medium</span>";
+      return "<span class='sev-low'>⚪ Low</span>";
+    }
+    function statusHtml(gt) {
+      if (gt === "Well covered")   return "<span class='gm-status-found'>✅ " + gt + "</span>";
+      if (gt === "Mentioned once") return "<span class='gm-status-partial'>🟡 " + gt + "</span>";
+      if (gt === "Implied (stem)") return "<span class='gm-status-partial'>🟡 " + gt + "</span>";
+      if (gt === "Weakly implied") return "<span class='gm-status-partial'>🟠 " + gt + "</span>";
+      return "<span class='gm-status-missing'>❌ Absent</span>";
+    }
+    function reqHtml(req, wt) {
+      var badge = req === "mandatory"
+        ? "<span class='badge-m'>M</span>"
+        : "<span class='badge-p'>P</span>";
+      var dots = wt === 3 ? " ●●●" : wt === 2 ? " ●●" : "";
+      return badge + "<span style='color:#64748b;font-size:10px'>" + dots + "</span>";
+    }
+
+    /* Render only gaps that need attention (skip "Well covered" rows to keep matrix focused) */
+    var tableRows = "";
+    var prevDomain = "";
+    var shownCount = 0;
+    domainOrder.forEach(function (domain) {
+      grouped[domain].forEach(function (row) {
+        if (row.gt === "Well covered") return; /* hide fully-covered rows */
+        if (shownCount >= 30) return;           /* cap at 30 rows */
+        shownCount++;
+        var domainCell = row.domain !== prevDomain
+          ? "<td class='gm-domain' rowspan='1'>" + row.domain + "</td>"
+          : "<td></td>";
+        prevDomain = row.domain;
+        tableRows += "<tr>" +
+          "<td class='gm-skill'>" + row.kw + "</td>" +
+          "<td class='gm-type'>" + statusHtml(row.gt) + "</td>" +
+          "<td>" + reqHtml(row.req, row.wt) + "</td>" +
+          "<td>" + sevHtml(row.sev) + "</td>" +
+          "<td class='suggestion'>" + row.sugg + "</td>" +
+          "</tr>";
+      });
+    });
+
+    if (!tableRows) {
+      return "<p style='color:#4ade80;font-size:13px;padding:8px 0'>✅ No significant gaps found — the resume shows strong coverage of all JD requirements.</p>";
+    }
+
+    return "<table class='gap-matrix'>" +
+      "<thead><tr>" +
+      "<th>Skill / Requirement</th>" +
+      "<th>Resume Status</th>" +
+      "<th>Type</th>" +
+      "<th>Severity</th>" +
+      "<th>Targeted Improvement</th>" +
+      "</tr></thead>" +
+      "<tbody>" + tableRows + "</tbody></table>" +
+      "<p style='font-size:11px;color:#475569;margin-top:6px'>Only gaps are shown. Well-covered skills are omitted from this matrix.</p>";
+  }
+
+  /* ── Narrative (now references gap matrix findings) ── */
+  function narrative(score, mandScore, prefScore, matched, missing, sec) {
+    var lv = score >= 80 ? "strong" : score >= 60 ? "moderate" : score >= 40 ? "partial" : "weak";
+    var criticalGaps = missing.filter(function (m) { return m.wt === 3 && m.req === "mandatory"; });
+    var highGaps     = missing.filter(function (m) { return (m.wt >= 2 || m.req === "mandatory") && !(m.wt === 3 && m.req === "mandatory"); });
+    var topStrengths = matched.filter(function (m) { return m.how === "exact" && m.wt >= 2; }).slice(0, 3).map(function(m){return "<em>" + m.jd + "</em>";});
+
+    var n = "";
+    if (lv === "strong") {
+      n = "This resume shows <strong>strong overall alignment</strong> (Overall: " + score + "% | Mandatory: " + (mandScore||"N/A") + "% | Preferred: " + (prefScore||"N/A") + "%). ";
+      n += topStrengths.length ? "Key strengths include " + topStrengths.join(", ") + ". " : "";
+      n += criticalGaps.length ? "However, " + criticalGaps.length + " critical mandatory gap" + (criticalGaps.length>1?"s remain: ":"s remain: ") + criticalGaps.slice(0,3).map(function(m){return "<em>"+m.kw+"</em>";}).join(", ") + "." : "No critical mandatory gaps detected.";
+    } else if (lv === "moderate") {
+      n = "This resume has a <strong>moderate fit</strong> (Overall: " + score + "% | Mandatory: " + (mandScore||"N/A") + "% | Preferred: " + (prefScore||"N/A") + "%). ";
+      n += topStrengths.length ? "Demonstrated strengths in " + topStrengths.join(", ") + ". " : "";
+      n += (criticalGaps.length + highGaps.length) > 0
+        ? "The gap matrix below identifies <strong>" + criticalGaps.length + " critical</strong> and <strong>" + highGaps.length + " high-severity</strong> gaps that need targeted attention before applying."
+        : "Minor gaps exist — review the matrix below for specific improvement actions.";
+    } else if (lv === "partial") {
+      n = "This resume is a <strong>partial match</strong> (Overall: " + score + "% | Mandatory: " + (mandScore||"N/A") + "% | Preferred: " + (prefScore||"N/A") + "%). ";
+      n += criticalGaps.length ? "<strong>" + criticalGaps.length + " critical mandatory gaps</strong> were identified (" + criticalGaps.slice(0,3).map(function(m){return "<em>"+m.kw+"</em>";}).join(", ") + "). These must be addressed. " : "";
+      n += "The gap matrix provides specific, actionable rewrites for each missing requirement.";
+    } else {
+      n = "This resume has <strong>weak alignment</strong> (Overall: " + score + "% | Mandatory: " + (mandScore||"N/A") + "% | Preferred: " + (prefScore||"N/A") + "%). ";
+      n += criticalGaps.length ? criticalGaps.length + " critical mandatory requirements are entirely absent. " : "";
+      n += "Significant resume restructuring is recommended. Use the gap matrix below as a rewriting roadmap.";
+    }
+    var ws = Object.keys(sec).filter(function (s) { return sec[s] < 50; });
+    if (ws.length) n += " The <em>" + ws.join(" and ") + "</em> section" + (ws.length > 1 ? "s" : "") + " show the weakest alignment.";
+    return n;
+  }
+
+  /* ── Main compare ── */
+  g("go-btn").addEventListener("click", function () {
+    var jdTxt = g("jd").value.trim(), rTxt = g("res").value.trim();
+    g("err").style.display = "none";
+    g("result").style.display = "none";
+
+    /* ── Consent gate: show disclosure modal on first use per session ── */
+    if (!sessionStorage.getItem("jdm_consent")) {
+      openConsentModal(function () {
+        sessionStorage.setItem("jdm_consent", "1");
+        g("go-btn").click();
+      });
+      return;
+    }
+
+    /* Usage limit check */
+    var session = getSession();
+    if (session) {
+      var users2 = getUsers();
+      var u2 = users2[session.email];
+      var used2 = (u2 && u2.uses) || 0;
+      var limit2 = limitFor(session.email);
+      if (used2 >= limit2) {
+        if (limit2 === FREE_LIMIT) {
+          /* Show access code modal instead of hard block */
+          openCodeModal();
+        } else if (limit2 === Infinity) {
+          /* Should not happen — Infinity users never run out */
+        } else {
+          showErr("You have reached the limit of " + limit2 + " analyses for this account.");
+        }
+        return;
+      }
+    }
+
+    if (!jdTxt || !rTxt) {
+      showErr(!jdTxt && !rTxt ? "Please provide both a Job Profile and a Resume." : !jdTxt ? "Job Profile is empty." : "Resume is empty.");
+      return;
+    }
+
+    var jf = freq(tok(jdTxt)), rf = freq(tok(rTxt));
+    var jk = Object.keys(jf), rk = new Set(Object.keys(rf));
+    var rs = {};
+    rk.forEach(function (w) { var s = stem(w); if (!rs[s]) rs[s] = w; });
+
+    /* ── Mandatory / Preferred detection ──
+       Split JD into sentences. Tag each sentence as mandatory or preferred
+       based on signal words. Each keyword is labelled by its sentence's signal.
+       Default = mandatory (safer — unknown sentences treated as required). */
+    var MAND_SIGNALS = /\b(required|must|mandatory|essential|necessary|critical|need|needs|minimum|qualification|you (must|will|should)|responsible for|expected to|key requirement)\b/i;
+    var PREF_SIGNALS = /\b(preferred|desirable|nice to have|bonus|advantageous|plus|ideally|ideally|beneficial|would be|an advantage|not essential|optional|good to have|asset)\b/i;
+
+    /* Build a per-keyword mandatory/preferred map from JD sentences */
+    kwPref = {};   /* reset for this run — defined in outer IIFE scope */
+    var sentences = jdTxt.replace(/([.!?;])/g, "$1|").split("|");
+    sentences.forEach(function (sent) {
+      var isPreferred = PREF_SIGNALS.test(sent) && !MAND_SIGNALS.test(sent);
+      var label = isPreferred ? "preferred" : "mandatory";
+      tok(sent).forEach(function (w) {
+        /* Only label as preferred if not already seen as mandatory */
+        if (!kwPref[w] || kwPref[w] === "preferred") kwPref[w] = label;
+      });
+    });
+
+    var matched = [], missing = [];
+    jk.forEach(function (w) {
+      var r   = findMatch(w, rk, rs);
+      var wt  = getWeight(w);
+      var req = kwPref[w] || "mandatory";
+      if (r.m) matched.push({ jd: w, res: r.rw, how: r.how, wt: wt, req: req });
+      else     missing.push({ kw: w, wt: wt, req: req });
+    });
+
+    var jSt = {};
+    jk.forEach(function (w) { jSt[stem(w)] = true; });
+    var extra = Object.keys(rf).filter(function (w) { return !jSt[stem(w)] && rf[w] >= 2; });
+
+    /* ── Three-way scoring ── */
+    function calcScore(items, matchedItems, reqType) {
+      var tot = 0, hit = 0;
+      items.forEach(function(m){ if(m.req===reqType||reqType==="all"){ tot+=m.wt; } });
+      matchedItems.forEach(function(m){ if(m.req===reqType||reqType==="all"){ hit+=m.wt; } });
+      missing.forEach(function(m){ if(m.req===reqType||reqType==="all"){ tot+=m.wt; } });
+      /* tot was double-counting matched; recalc cleanly */
+      var allWt = matchedItems.reduce(function(s,m){ return (m.req===reqType||reqType==="all")?s+m.wt:s; }, 0) +
+                  missing.reduce(function(s,m){    return (m.req===reqType||reqType==="all")?s+m.wt:s; }, 0);
+      return allWt === 0 ? null : Math.round(
+        matchedItems.reduce(function(s,m){ return (m.req===reqType||reqType==="all")?s+m.wt:s; }, 0) / allWt * 100
+      );
+    }
+
+    var mandScore = calcScore([], matched, "mandatory");
+    var prefScore = calcScore([], matched, "preferred");
+    /* Overall = mandatory 70% weight + preferred 30% weight */
+    var score = (mandScore !== null && prefScore !== null)
+      ? Math.round(mandScore * 0.70 + prefScore * 0.30)
+      : (mandScore !== null ? mandScore : (prefScore !== null ? prefScore : 0));
+    /* Fallback: if all keywords unclassified, use plain weighted */
+    if (mandScore === null && prefScore === null) {
+      var allWtFb = matched.reduce(function(s,m){return s+m.wt;},0) + missing.reduce(function(s,m){return s+m.wt;},0);
+      score = allWtFb === 0 ? 0 : Math.round(matched.reduce(function(s,m){return s+m.wt;},0) / allWtFb * 100);
+    }
+    var isOk = score >= 60;
+
+    /* Sort helpers — by weight desc, then freq desc */
+    function sfq(arr, fr) {
+      return arr.slice().sort(function (a, b) {
+        var wa = a.wt || getWeight(a.kw || a), wb = b.wt || getWeight(b.kw || b);
+        if (wb !== wa) return wb - wa;
+        return (fr[b.kw || b] || 0) - (fr[a.kw || a] || 0);
+      });
+    }
+    function smfq(arr, fr) {
+      return arr.slice().sort(function (a, b) {
+        if (b.wt !== a.wt) return b.wt - a.wt;
+        return (fr[b.jd] || 0) - (fr[a.jd] || 0);
+      });
+    }
+
+    var ec = matched.filter(function (m) { return m.how === "exact"; }).length;
+    var sc = matched.filter(function (m) { return m.how === "stem"; }).length;
+    var fc = matched.filter(function (m) { return m.how === "fuzzy"; }).length;
+
+    var totalWt = matched.reduce(function(s,m){return s+m.wt;},0) + missing.reduce(function(s,m){return s+m.wt;},0);
+    var ewt = matched.filter(function(m){return m.how==="exact";}).reduce(function(s,m){return s+m.wt;},0);
+    var swt = matched.filter(function(m){return m.how==="stem"; }).reduce(function(s,m){return s+m.wt;},0);
+    var fwt = matched.filter(function(m){return m.how==="fuzzy";}).reduce(function(s,m){return s+m.wt;},0);
+
+    /* Ring — overall */
+    var CIRC = 232.478, off = CIRC * (1 - score / 100);
+    var rfEl = g("ring-fg");
+    rfEl.setAttribute("stroke-dashoffset", off);
+    rfEl.setAttribute("stroke", hx(score));
+    g("ring-pct").textContent = score + "%";
+    g("ring-pct").setAttribute("fill", hx(score));
+
+    /* Verdict */
+    g("vinfo").className = "vinfo " + (isOk ? "match" : "nomatch");
+    g("v-title").textContent = isOk ? "✦ Strong Match" : "✗ Below Threshold";
+    g("v-desc").textContent = isOk
+      ? "Overall weighted fit is " + score + "% — above the 60% threshold."
+      : "Overall weighted fit is only " + score + "% — below the 60% threshold.";
+
+    /* Mini bars — weighted % of total weight */
+    var pE = totalWt ? Math.round(ewt / totalWt * 100) : 0;
+    var pS = totalWt ? Math.round(swt / totalWt * 100) : 0;
+    var pF = totalWt ? Math.round(fwt / totalWt * 100) : 0;
+    g("mini-bars").innerHTML =
+      "<div class='mrow'><div class='mlbl'>Exact</div><div class='mtrack'><div class='mfill' style='width:" + pE + "%;background:#16a34a'></div></div><div class='mpct'>" + pE + "%</div></div>" +
+      "<div class='mrow'><div class='mlbl'>Stem</div><div class='mtrack'><div class='mfill' style='width:" + pS + "%;background:#4f46e5'></div></div><div class='mpct'>" + pS + "%</div></div>" +
+      "<div class='mrow'><div class='mlbl'>Fuzzy</div><div class='mtrack'><div class='mfill' style='width:" + pF + "%;background:#d97706'></div></div><div class='mpct'>" + pF + "%</div></div>";
+
+    /* ── 3-score fit cards (Enhancement 8: score tooltips) ── */
+    function fitCard(label, icon, val, sub, extraCls, tooltipLines) {
+      var tip = tooltipLines ? "<div class='score-tooltip'>" + tooltipLines + "</div>" : "";
+      if (val === null) return "<div class='fit-card" + (extraCls ? " " + extraCls : "") + "'>" +
+        "<div class='fit-card-label'>" + icon + " " + label + "</div>" +
+        "<div class='fit-card-score' style='color:#94a3b8'>N/A</div>" +
+        "<div class='fit-card-sub'>" + sub + "</div>" + tip + "</div>";
+      var col  = hx(val);
+      var barcls = val >= 70 ? "bhi" : val >= 40 ? "bmi" : "blo";
+      return "<div class='fit-card" + (extraCls ? " " + extraCls : "") + "'>" +
+        "<div class='fit-card-label'>" + icon + " " + label + "</div>" +
+        "<div class='fit-card-score' style='color:" + col + "'>" + val + "%</div>" +
+        "<div class='fit-card-bar'><div class='fit-card-fill " + barcls + "' style='width:" + val + "%'></div></div>" +
+        "<div class='fit-card-sub'>" + sub + "</div>" + tip + "</div>";
+    }
+
+    var mandKwCount = matched.filter(function(m){return m.req==="mandatory";}).length +
+                      missing.filter(function(m){return m.req==="mandatory";}).length;
+    var prefKwCount = matched.filter(function(m){return m.req==="preferred";}).length +
+                      missing.filter(function(m){return m.req==="preferred";}).length;
+
+    var mandHitWt = matched.reduce(function(s,m){return m.req==="mandatory"?s+m.wt:s;},0);
+    var mandTotWt = mandHitWt + missing.reduce(function(s,m){return m.req==="mandatory"?s+m.wt:s;},0);
+    var prefHitWt = matched.reduce(function(s,m){return m.req==="preferred"?s+m.wt:s;},0);
+    var prefTotWt = prefHitWt + missing.reduce(function(s,m){return m.req==="preferred"?s+m.wt:s;},0);
+
+    g("fit-scores").innerHTML =
+      fitCard("Mandatory Fit", "🔴", mandScore,
+              mandKwCount + " required keyword" + (mandKwCount !== 1 ? "s" : ""), "",
+              "<strong>Mandatory Fit</strong><br>"+mandHitWt+" / "+mandTotWt+" weighted pts matched<br>"+
+              matched.filter(function(m){return m.req==="mandatory";}).length+" keywords found &nbsp;·&nbsp; "+
+              missing.filter(function(m){return m.req==="mandatory";}).length+" missing") +
+      fitCard("Preferred Fit", "🔵", prefScore,
+              prefKwCount + " preferred keyword" + (prefKwCount !== 1 ? "s" : ""), "",
+              "<strong>Preferred Fit</strong><br>"+prefHitWt+" / "+prefTotWt+" weighted pts matched<br>"+
+              matched.filter(function(m){return m.req==="preferred";}).length+" keywords found &nbsp;·&nbsp; "+
+              missing.filter(function(m){return m.req==="preferred";}).length+" missing") +
+      fitCard("Overall Fit",   "⭐", score,
+              "70% mandatory + 30% preferred", "overall",
+              "<strong>Overall Fit</strong><br>"+
+              (mandScore!==null?"Mandatory "+mandScore+"% × 70% = "+(mandScore!==null?Math.round(mandScore*0.7):"–")+"pts":"")+"<br>"+
+              (prefScore!==null?"Preferred "+prefScore+"% × 30% = "+(prefScore!==null?Math.round(prefScore*0.3):"–")+"pts":"")+"<br>"+
+              "Exact: "+ec+" &nbsp;·&nbsp; Stem: "+sc+" &nbsp;·&nbsp; Fuzzy: "+fc);
+
+    /* Section scores */
+    var sec = { Skills: secScore("Skills", jdTxt, rTxt), Experience: secScore("Experience", jdTxt, rTxt), Education: secScore("Education", jdTxt, rTxt) };
+    var icons = { Skills: "⚙️", Experience: "💼", Education: "🎓" };
+    g("sec-grid").innerHTML = Object.keys(sec).map(function (s) {
+      var v = sec[s];
+      return "<div class='sec-card'><div class='sec-name'>" + icons[s] + " " + s + "</div><div class='sec-val " + cc(v) + "'>" + v + "%</div><div class='sec-bar'><div class='sec-fill " + bc(v) + "' style='width:" + v + "%'></div></div></div>";
+    }).join("");
+
+    /* AI panel — narrative + gap matrix */
+    var sm = smfq(matched, jf);
+    g("narrative").innerHTML = narrative(score, mandScore, prefScore, matched, missing, sec);
+    g("gap-matrix-wrap").innerHTML = buildGapMatrix(matched, missing, jf, rf, mandScore, prefScore, score, sec);
+
+    /* ── Evidence tiers ── */
+    var strong = [], partial = [], weak = [], none = [];
+
+    /* Weight badge helper */
+    function wtBadge(wt) {
+      if (wt === 3) return " <sup style='font-size:9px;font-weight:700;opacity:.85' title='Critical weight'>●●●</sup>";
+      if (wt === 2) return " <sup style='font-size:9px;font-weight:700;opacity:.7'  title='Important weight'>●●</sup>";
+      return "";
+    }
+
+    smfq(matched, jf).forEach(function (m) {
+      var resFreqVal = rf[m.res] || 0;
+      if (m.how === "exact" && resFreqVal >= 2) {
+        strong.push(m);
+      } else if (m.how === "exact" || m.how === "stem") {
+        partial.push(m);
+      } else {
+        weak.push(m);
+      }
+    });
+    sfq(missing, jf).forEach(function (m) { none.push(m); });
+
+    function reqBadge(req) {
+      return req === "mandatory"
+        ? "<span class='badge-m' title='Mandatory requirement'>M</span>"
+        : "<span class='badge-p' title='Preferred requirement'>P</span>";
+    }
+
+    function evTier(label, dot, cls, hdrCls, items, isMissing) {
+      if (!items.length) return "";
+      var tierWt = items.reduce(function (s, item) { return s + (item.wt || 1); }, 0);
+      var tags = items.slice(0, 50).map(function (item) {
+        if (isMissing) {
+          return "<span class='ev-tag " + cls + "' title='Weight: " + item.wt + "x | " + item.req + "'>" +
+                 item.kw + reqBadge(item.req) + wtBadge(item.wt) + "</span>";
+        }
+        var lbl = item.jd === item.res ? item.jd : item.jd + " → " + item.res;
+        var how = item.how !== "exact" ? "<sup style='font-size:9px;opacity:.7'>" + (item.how === "stem" ? "stem" : "~") + "</sup>" : "";
+        return "<span class='ev-tag " + cls + "' title='Weight: " + item.wt + "x | Match: " + item.how + " | " + item.req + "'>" +
+               lbl + how + reqBadge(item.req) + wtBadge(item.wt) + "</span>";
+      }).join("");
+      return "<div class='ev-tier-hdr " + hdrCls + "'>" + dot + " " + label +
+             "<span class='ev-tier-count'>" + items.length + " skill" + (items.length !== 1 ? "s" : "") +
+             " &nbsp;·&nbsp; " + tierWt + " pts</span></div>" +
+             "<div class='ev-tags'>" + tags + "</div>";
+    }
+
+    g("ev-body").innerHTML =
+      evTier("Strong Evidence",          "🟢", "ev-strong",  "ev-hdr-strong",  strong,  false) +
+      evTier("Partial Evidence",         "🟡", "ev-partial", "ev-hdr-partial", partial, false) +
+      evTier("Weak / Indirect Evidence", "🟠", "ev-weak",    "ev-hdr-weak",    weak,    false) +
+      evTier("No Evidence",              "🔴", "ev-none",    "ev-hdr-none",    none,    true)  ||
+      "<span class='empty'>No keywords to display.</span>";
+
+    /* ── Governance additions ── */
+    /* 1. JD Bias scan — flag proxy/exclusionary language */
+    var biasFindings = scanJdBias(jdTxt);
+    var bList = g("bias-alert-list");
+    if (biasFindings.length) {
+      bList.innerHTML = biasFindings.map(function (f) {
+        return "<li><strong>" + f.terms.join(", ") + "</strong> — " + f.label + "</li>";
+      }).join("");
+      g("bias-alert").classList.add("on");
+    } else {
+      g("bias-alert").classList.remove("on");
+    }
+
+    /* 2. Human-in-the-loop advisory band */
+    var hitlText = g("hitl-text");
+    if (score >= 45 && score <= 65) {
+      hitlText.innerHTML = "<strong>⚠️ Uncertainty Zone (45–65%)</strong> — This score falls in the inconclusive range. Do <strong>not</strong> use this result as the sole basis for a screening decision. Escalate to a human reviewer before proceeding.";
+    } else if (score > 65) {
+      hitlText.innerHTML = "Score is above the uncertainty band. This result remains <strong>advisory only</strong> — a qualified human reviewer must approve any final shortlist or rejection decision.";
+    } else {
+      hitlText.innerHTML = "Score is below the minimum threshold. This result remains <strong>advisory only</strong> — do not reject solely on this AI score without human review.";
+    }
+    g("hitl-band").classList.add("on");
+
+    /* 3. Governance & compliance panel */
+    g("gov-body").innerHTML = buildGovernancePanel(score, biasFindings, jdTxt, rTxt, mandScore, prefScore);
+
+    /* 4. Write immutable audit log entry */
+    var sess3 = getSession();
+    writeAuditLog({
+      ts:        new Date().toISOString(),
+      user:      sess3 ? sess3.email : "anon",
+      score:     score,
+      mandScore: mandScore !== null ? mandScore : null,
+      prefScore: prefScore !== null ? prefScore : null,
+      biasFlags: biasFindings.length,
+      hitl:      score >= 45 && score <= 65
+    });
+
+    /* 5. Counterfactual simulation */
+    buildCounterfactual(jdTxt, rTxt, score, mandScore, prefScore);
+
+    /* 6. Encode share hash */
+    var shareHash = encodeReport(score, mandScore, prefScore, biasFindings.length, score>=45&&score<=65, matched, missing);
+    if(shareHash) { history.replaceState(null,"","#"+shareHash); g("share-btn").style.display="inline-flex"; }
+
+    /* Increment usage count */
+    var sess = getSession();
+    if (sess) {
+      var allUsers = getUsers();
+      if (allUsers[sess.email]) {
+        allUsers[sess.email].uses = ((allUsers[sess.email].uses) || 0) + 1;
+        saveUsers(allUsers);
+        var remLeft = limitFor(sess.email) - allUsers[sess.email].uses;
+        g("nav-username").textContent = navLabel(sess.name, sess.email);
+        if (remLeft <= 0) {
+          g("go-btn").disabled = true;
+          g("go-btn").style.opacity = "0.5";
+          g("go-btn").title = "Analysis limit reached";
+        }
+      }
+    }
+
+    g("result").style.display = "block";
+    g("result").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  /* ── Access code modal ── */
+  function openCodeModal() {
+    g("code-modal").classList.add("on");
+    g("code-input").value = "";
+    g("code-err").classList.remove("on");
+    setTimeout(function () { g("code-input").focus(); }, 50);
+  }
+
+  g("enter-code-btn").addEventListener("click", openCodeModal);
+
+  g("code-cancel").addEventListener("click", function () {
+    g("code-modal").classList.remove("on");
+  });
+
+  g("code-submit").addEventListener("click", function () {
+    var entered = g("code-input").value.trim().toUpperCase();
+    var ceEl = g("code-err");
+    ceEl.classList.remove("on");
+
+    if (!entered) {
+      ceEl.textContent = "Please enter an access code.";
+      return ceEl.classList.add("on");
+    }
+
+    /* Check code is valid */
+    var newLimit = ACCESS_CODES[entered];
+    if (newLimit === undefined) {
+      ceEl.textContent = "Invalid access code. Please check and try again.";
+      return ceEl.classList.add("on");
+    }
+
+    /* Check code not already used by this account */
+    var sess2 = getSession();
+    if (!sess2) { g("code-modal").classList.remove("on"); return; }
+    var allUsers2 = getUsers();
+    var acct = allUsers2[sess2.email];
+    if (!acct) { g("code-modal").classList.remove("on"); return; }
+
+    var usedCodes = acct.usedCodes || [];
+    if (usedCodes.indexOf(entered) !== -1) {
+      ceEl.textContent = "This code has already been used on your account.";
+      return ceEl.classList.add("on");
+    }
+
+    /* Only allow upgrading the limit, not downgrading */
+    var current = acct.codeLimit || FREE_LIMIT;
+    if (newLimit !== Infinity && newLimit <= current) {
+      ceEl.textContent = "This code does not increase your current limit.";
+      return ceEl.classList.add("on");
+    }
+
+    /* Redeem — store new limit and record code */
+    acct.codeLimit = newLimit;
+    acct.usedCodes = usedCodes.concat([entered]);
+    allUsers2[sess2.email] = acct;
+    saveUsers(allUsers2);
+
+    g("code-modal").classList.remove("on");
+    g("nav-username").textContent = navLabel(sess2.name, sess2.email);
+    g("enter-code-btn").style.display = "none";
+
+    /* Show a brief success banner */
+    var limitLabel = newLimit === Infinity ? "unlimited" : "up to " + newLimit;
+    showErr("");
+    var errEl = g("err");
+    errEl.style.background = "#f0fdf4";
+    errEl.style.borderColor = "#86efac";
+    errEl.style.color = "#15803d";
+    errEl.textContent = "Access code accepted! You now have " + limitLabel + " analyses.";
+    errEl.style.display = "block";
+    setTimeout(function () { errEl.style.display = "none"; errEl.style.background = ""; errEl.style.borderColor = ""; errEl.style.color = ""; }, 4000);
+  });
+
+  g("code-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") g("code-submit").click();
+  });
+
+  /* ══════════════════════════════════════════
+     ENHANCEMENT 2 — Counterfactual Score
+  ══════════════════════════════════════════ */
+  function buildCounterfactual(jdTxt, rTxt, origScore, origMand, origPref) {
+    var cfRes = deproxyResume(rTxt);
+    var cfJf  = freq(tok(jdTxt));
+    var cfRf  = freq(tok(cfRes));
+    var cfJk  = Object.keys(cfJf);
+    var cfRk  = new Set(Object.keys(cfRf));
+    var cfRs  = {};
+    cfRk.forEach(function(w){ var s = stem(w); if(!cfRs[s]) cfRs[s]=w; });
+
+    var cfMatched=[], cfMissing=[];
+    cfJk.forEach(function(w){
+      var r=findMatch(w,cfRk,cfRs), wt=getWeight(w), req=kwPref[w]||"mandatory";
+      if(r.m) cfMatched.push({jd:w,res:r.rw,how:r.how,wt:wt,req:req});
+      else     cfMissing.push({kw:w,wt:wt,req:req});
+    });
+
+    function cfCalc(req){
+      var allWt = cfMatched.reduce(function(s,m){return(m.req===req||req==="all")?s+m.wt:s;},0)+
+                  cfMissing.reduce(function(s,m){return(m.req===req||req==="all")?s+m.wt:s;},0);
+      return allWt===0?null:Math.round(cfMatched.reduce(function(s,m){return(m.req===req||req==="all")?s+m.wt:s;},0)/allWt*100);
+    }
+    var cfMand=cfCalc("mandatory"), cfPref=cfCalc("preferred");
+    var cfScore=(cfMand!==null&&cfPref!==null)?Math.round(cfMand*0.70+cfPref*0.30):(cfMand!==null?cfMand:(cfPref!==null?cfPref:0));
+
+    /* What was stripped? */
+    var origTokens=new Set(Object.keys(freq(tok(rTxt))));
+    var cfTokens  =new Set(Object.keys(freq(tok(cfRes))));
+    var stripped=[];
+    origTokens.forEach(function(t){ if(!cfTokens.has(t)) stripped.push(t); });
+
+    var delta=cfScore-origScore;
+    var deltaCls=delta>0?"cf-delta-up":delta<0?"cf-delta-down":"cf-delta-same";
+    var deltaTxt=delta===0?"No change after de-proxying":(delta>0?"Score improved by +"+delta+"% after removing proxy identifiers":"Score decreased by "+Math.abs(delta)+"% after removing proxy identifiers — some matched terms were proxies");
+
+    g("cf-body").innerHTML=
+      "<div class='cf-compare'>"+
+        "<div class='cf-box cf-box-orig'><div class='cf-box-label'>Original Resume</div><div class='cf-box-score' style='color:"+hx(origScore)+"'>"+origScore+"%</div><div class='cf-box-sub'>Mand: "+(origMand!==null?origMand+"%":"N/A")+" &nbsp;·&nbsp; Pref: "+(origPref!==null?origPref+"%":"N/A")+"</div></div>"+
+        "<div class='cf-box cf-box-counter'><div class='cf-box-label'>After De-Proxying</div><div class='cf-box-score' style='color:"+hx(cfScore)+"'>"+cfScore+"%</div><div class='cf-box-sub'>Mand: "+(cfMand!==null?cfMand+"%":"N/A")+" &nbsp;·&nbsp; Pref: "+(cfPref!==null?cfPref+"%":"N/A")+"</div></div>"+
+      "</div>"+
+      "<div class='cf-delta "+deltaCls+"'>"+deltaTxt+"</div>"+
+      (stripped.length?"<div class='cf-stripped'><strong>Terms removed during de-proxying:</strong> "+stripped.slice(0,20).join(", ")+(stripped.length>20?" …and "+(stripped.length-20)+" more":"")+"</div>":"<div class='cf-stripped'>No significant proxy identifiers were detected in the resume.</div>");
+
+    g("cf-panel").style.display="block";
+    g("cf-body").style.display="block";
+    g("cf-toggle").textContent="▲ Hide";
+  }
+
+  g("cf-hdr").addEventListener("click",function(){
+    var b=g("cf-body"),t=g("cf-toggle");
+    var open=b.style.display!=="none";
+    b.style.display=open?"none":"block";
+    t.textContent=open?"▼ Show":"▲ Hide";
+  });
+
+  /* ══════════════════════════════════════════
+     TERMS OF USE — First-visit gate
+  ══════════════════════════════════════════ */
+  var TOU_KEY = "jdm_tou_accepted";
+
+  function openTouModal() {
+    g("tou-modal").classList.add("on");
+  }
+  function closeTouModal(accepted) {
+    g("tou-modal").classList.remove("on");
+    if (accepted) localStorage.setItem(TOU_KEY, "1");
+  }
+
+  /* Enable Accept button only when checkbox is ticked */
+  g("tou-agree-chk").addEventListener("change", function () {
+    var btn = g("tou-accept");
+    btn.disabled = !this.checked;
+    btn.style.opacity = this.checked ? "" : "0.5";
+  });
+  g("tou-accept").addEventListener("click", function () {
+    if (!g("tou-agree-chk").checked) return;
+    closeTouModal(true);
+  });
+  g("tou-decline").addEventListener("click", function () {
+    closeTouModal(false);
+  });
+
+  /* "Terms of Use" link in auth box */
+  g("open-tou-link").addEventListener("click", function () { openTouModal(); });
+
+  /* Show on first-ever visit (before any login) */
+  if (!localStorage.getItem(TOU_KEY)) {
+    openTouModal();
+  }
+
+  /* ══════════════════════════════════════════
+     PRE-DEPLOYMENT CHECKLIST
+  ══════════════════════════════════════════ */
+  var PD_KEY = "jdm_pd_dismissed";
+
+  function updatePdProgress() {
+    var total = 6, done = 0;
+    for (var i = 1; i <= total; i++) {
+      if (g("pd-c" + i) && g("pd-c" + i).checked) done++;
+    }
+    var pct = Math.round(done / total * 100);
+    g("pd-fill").style.width = pct + "%";
+    g("pd-count").textContent = done + " / " + total + " completed";
+    var statusEl = g("pd-status");
+    if (done === total) {
+      statusEl.textContent = "✅ Ready for Production";
+      statusEl.style.color = "#16a34a";
+    } else if (done >= 3) {
+      statusEl.textContent = "⚠️ Partially Ready";
+      statusEl.style.color = "#d97706";
+    } else {
+      statusEl.textContent = "❌ Not Ready";
+      statusEl.style.color = "#dc2626";
+    }
+    /* Persist checkbox states */
+    var states = {};
+    for (var j = 1; j <= total; j++) {
+      if (g("pd-c" + j)) states["pd-c" + j] = g("pd-c" + j).checked;
+    }
+    try { localStorage.setItem("jdm_pd_state", JSON.stringify(states)); } catch(e) {}
+  }
+
+  /* Restore saved checkbox states */
+  (function () {
+    try {
+      var saved = JSON.parse(localStorage.getItem("jdm_pd_state")) || {};
+      for (var k in saved) { if (g(k)) g(k).checked = saved[k]; }
+    } catch(e) {}
+    updatePdProgress();
+  })();
+
+  /* Wire checkboxes */
+  for (var _i = 1; _i <= 6; _i++) {
+    (function (idx) {
+      var el = g("pd-c" + idx);
+      if (el) el.addEventListener("change", updatePdProgress);
+    })(_i);
+  }
+
+  /* Show banner after login (only if not dismissed this session) */
+  function showPredeployBanner() {
+    if (!sessionStorage.getItem(PD_KEY)) {
+      g("predeploy-banner").classList.add("on");
+    }
+  }
+
+  g("pd-dismiss").addEventListener("click", function () {
+    g("predeploy-banner").classList.remove("on");
+    sessionStorage.setItem(PD_KEY, "1");
+  });
+
+  /* Hook into showApp to display banner after login */
+  var _origShowApp = showApp;
+  showApp = function (user) {
+    _origShowApp(user);
+    showPredeployBanner();
+  };
+
+  /* ══════════════════════════════════════════
+     ENHANCEMENT 6 — Dark Mode Toggle
+  ══════════════════════════════════════════ */
+  var darkBtn=document.createElement("button");
+  darkBtn.className="dark-toggle-btn"; darkBtn.id="dark-toggle-btn";
+  var _dark=localStorage.getItem("jdm_dark")==="1";
+  if(_dark) document.body.classList.add("dark");
+  darkBtn.textContent=_dark?"☀️ Light Mode":"🌙 Dark Mode";
+  document.body.appendChild(darkBtn);
+  darkBtn.addEventListener("click",function(){
+    _dark=!_dark;
+    document.body.classList.toggle("dark",_dark);
+    localStorage.setItem("jdm_dark",_dark?"1":"0");
+    darkBtn.textContent=_dark?"☀️ Light Mode":"🌙 Dark Mode";
+  });
+
+  /* ══════════════════════════════════════════
+     ENHANCEMENT 7 — Shareable Report Link
+  ══════════════════════════════════════════ */
+  var shareToast=document.createElement("div");
+  shareToast.className="share-toast"; shareToast.id="share-toast";
+  shareToast.textContent="🔗 Report link copied to clipboard!";
+  document.body.appendChild(shareToast);
+
+  function encodeReport(score,mandScore,prefScore,biasFlags,hitl,matched,missing){
+    var payload={
+      s:score, m:mandScore, p:prefScore, b:biasFlags, h:hitl?1:0,
+      mk:matched.slice(0,12).map(function(x){return x.jd;}),
+      ms:missing.slice(0,12).map(function(x){return x.kw;})
+    };
+    try{ return btoa(unescape(encodeURIComponent(JSON.stringify(payload)))); }catch(e){ return ""; }
+  }
+
+  function decodeReport(hash){
+    try{ return JSON.parse(decodeURIComponent(escape(atob(hash)))); }catch(e){ return null; }
+  }
+
+  /* Restore from hash on load */
+  (function(){
+    var h=location.hash.replace("#","");
+    if(!h) return;
+    var d=decodeReport(h);
+    if(!d) return;
+    /* Show a summary banner */
+    var banner=document.createElement("div");
+    banner.style.cssText="background:#f0f9ff;border:1px solid #7dd3fc;border-radius:10px;padding:12px 16px;margin:0 auto 16px;max-width:820px;font-size:12px;color:#0369a1";
+    banner.innerHTML="<strong>📎 Shared Report:</strong> Overall <strong>"+d.s+"%</strong> &nbsp;·&nbsp; Mandatory <strong>"+(d.m!==null?d.m+"%":"N/A")+"</strong> &nbsp;·&nbsp; Preferred <strong>"+(d.p!==null?d.p+"%":"N/A")+"</strong> &nbsp;·&nbsp; Bias flags: <strong>"+d.b+"</strong> &nbsp;·&nbsp; HITL: <strong>"+(d.h?"Yes":"No")+"</strong>"+
+      "<br><span style='color:#64748b'>Matched: "+(d.mk||[]).join(", ")+"</span>"+
+      "<br><span style='color:#64748b'>Missing: "+(d.ms||[]).join(", ")+"</span>"+
+      "<button style='float:right;background:none;border:none;cursor:pointer;color:#94a3b8;font-size:14px' onclick='this.parentNode.remove()'>✕</button>";
+    var page=document.querySelector(".page");
+    if(page) page.insertBefore(banner,page.firstChild);
+  })();
+
+  g("share-btn").addEventListener("click",function(){
+    var hash=location.hash.replace("#","");
+    if(!hash){ alert("Run an analysis first to generate a shareable link."); return; }
+    var url=location.href.split("#")[0]+"#"+hash;
+    if(navigator.clipboard){ navigator.clipboard.writeText(url).catch(function(){}); }
+    else{ var ta=document.createElement("textarea");ta.value=url;document.body.appendChild(ta);ta.select();document.execCommand("copy");document.body.removeChild(ta); }
+    shareToast.classList.add("on");
+    setTimeout(function(){ shareToast.classList.remove("on"); },2500);
+  });
+
+}());
+</script>
+
+<div style="position:fixed;bottom:12px;right:16px;font-size:11px;color:#9ca3af;font-family:-apple-system,'Segoe UI',system-ui,sans-serif;pointer-events:none;z-index:9999;">
+  Developed by Vishveshwar Rao (Vish)
+</div>
+
+</body>
+</html>
