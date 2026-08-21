@@ -1,0 +1,1 @@
+The Job Fit Analyzer  compares a Job Profile against a candidate's Resume to produce a structured fit assessment. This asset help for initial screening by the Project / Hiring / TA Team before candidate profile be shared with Technical Panel for Evaluation.
